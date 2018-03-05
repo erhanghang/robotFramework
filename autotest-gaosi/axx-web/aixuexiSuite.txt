@@ -1,0 +1,684 @@
+*** Settings ***
+Resource          业务动作.txt
+Resource          基础动作.txt
+Resource          参数.txt
+Library           SSHLibrary
+Library           AutoItLibrary
+Library           ExcelLibrary
+Library           String
+Library           HttpLibrary
+Library           RequestsLibrary
+Library           Collections
+Library           OperatingSystem
+
+*** Test Cases ***
+写入测试环境hosts
+    [Tags]    finish
+    写入测试环境hosts    hosts
+
+WSX_axx_创建机构
+    [Tags]
+    [Timeout]
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    axx_后台_销售管理_客户管理_创建机构    ${jg_name}    @{jg_phone}[0]
+    axx_前台_在线签约
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    axx_后台_销售管理_转正审批
+
+axx_校长创建教师
+    [Documentation]    前置条件：机构存在，校长存在
+    ...
+    ...    2.校长登录爱学习前台系统
+    ...
+    ...    3.在学校管理-账号管理-创建教师
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_学校管理_账号管理-新建教师    @{TeacherInfo}[0]    @{TeacherInfo}[1]    @{TeacherInfo}[2]    @{TeacherInfo}[3]    @{TeacherInfo}[4]    @{TeacherInfo}[5]
+
+axx_校长创建班级
+    [Documentation]    前置条件：教师存在
+    ...
+    ...    1.校长登录爱学习前台系统。
+    ...
+    ...    2.学校管理-班级管理-创建班级，创建班级时与教师进行关联
+    [Tags]    finish
+    [Setup]
+    [Template]
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_学校管理_班级管理-创建班级    ${bj_name}
+
+axx_校长录入学员
+    [Documentation]    前置条件：教师下班级存在
+    ...
+    ...    1.校长登录爱学习前台系统。
+    ...
+    ...    2.管理中心-学员管理-创建学员，与班级相关联
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_学校管理_学员管理-录入学员    ${grade}    ${bj_name}
+
+axx_备课
+    [Documentation]    前置条件：教师、班级、学员存在
+    ...
+    ...    1.教师登录爱学习前台系统
+    ...
+    ...    2.备课中，查看班型讲次中的课件视频、学员作业、学科介绍、培训中心
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{TeacherInfo}[1]    123456
+    axx_前台_备课-课件视频
+    axx_前台_备课-学员作业
+    axx_前台_备课-学科介绍
+
+axx_授课
+    [Documentation]    前置条件：教师、班级、学员存在
+    ...
+    ...    1.教师登录爱学习前台系统
+    ...
+    ...    2.进入授课中，对该教师对应的班级讲次，进行点名、本将课件中随机提问以及加积分、对讲次学员的增删操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{TeacherInfo}[1]    123456
+    axx_前台_授课
+    axx_前台_授课_讲次    ${bj_name}    1    #班级|讲次
+    axx_前台_授课_讲次_点名
+    axx_前台_授课_讲次_增删学员    小学生    15000000203
+    axx_前台_授课_讲次_本讲课件
+
+axx_购买教材及取消订单操作
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1.校长登录爱学习前台系统
+    ...
+    ...    2.学校管理-购买教材，进行教材购买下单支付
+    ...
+    ...    3.后台管理登录管理中心
+    ...
+    ...    4.商店管理-订单-待发货状态，取消对应订单
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_在线商城
+    ${order-num}    axx_前台_在线商城_购买教材
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    axx_后台_商店管理_取消订单    ${order-num}
+
+axx_密码修改及还原
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1.校长登录爱学习前台系统
+    ...
+    ...    2.学校管理-修改密码，对密码进行修改，后进行还原
+    [Tags]
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_学校管理_密码修改    123456    654321
+    axx_前台用户登录    @{jg_phone}[0]    654321
+    axx_前台_学校管理
+    axx_前台_学校管理_密码修改    654321    123456
+
+axx_申请试用
+    [Documentation]    1.用户在爱学习前台登录页面
+    ...
+    ...    2.申请试用，进行申请试用操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台_申请试用    00020001002
+
+WSX_axx_校长批量录入学员未完？
+    Comment    axx_前台用户登录    18600298826    qaz123
+    axx_前台用户登录    @{headmsterInfo}[0]    @{headmsterInfo}[1]    #18600298826    qaz123
+    axx_前台_学校管理
+    Comment    非正常账号判断
+    axx_前台_学校管理_学员管理-批量录入学员
+
+axx_基础设置
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1.校长登录爱学习前台系统
+    ...
+    ...    2.学校管理-基础设置，对教材版本、考区、校区、班型等进行设置操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_基础设置
+
+axx_前台测评_预览/下载
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1、校长登录爱学习前台系统
+    ...
+    ...    2、测评-入学测评，对相应试卷进行预览和下载
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_打开测评
+    axx_测评（预览、下载）
+
+axx_前台测评_录入/报告
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1、校长登录爱学习前台系统
+    ...
+    ...    2、测评-入学测评，对相应试卷进行录入和查看报告
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_打开测评
+    axx_测评（录入、报告预览）
+
+axx_期中期末测评
+    [Documentation]    1、校长登录爱学习前台系统
+    ...
+    ...    2、测评-期中期末测评，对相应试卷进行录入得分提交答案和查看报告
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    13021258755    123456
+    axx_打开测评
+    axx_前台_期中期末测评
+
+WSX_axx_header栏点击
+    axx_前台_修改密码
+    axx_header按钮点击
+
+WSX_axx_冒烟用例
+    Comment    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    Comment    axx_前台_备课
+    Comment    axx_前台_备课-课件视频
+    Comment    axx_前台用户登录    @{TeacherInfo}[1]    123456
+    Comment    axx_前台_授课
+    Comment    axx_前台_授课-授课?
+
+登录账号判断
+    [Documentation]    登录的账号进行判断
+    [Tags]
+    [Timeout]    10 minutes
+    axx_前台用户登录    00050001009    @{headmsterInfo}[1]    #@{headmsterInfo}[0]    @{headmsterInfo}[1]    00020001003
+    非正常账号判断
+
+glzx_内容管理_招生资料上传
+    [Documentation]    前置条件：管理中心账号存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、内容管理-营销资料，进行上传资料
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_上传招生营销资料
+
+axx_招生资料前台下载
+    [Documentation]    前提条件：校长存在
+    ...
+    ...    1、前台校长登录爱学习系统
+    ...
+    ...    2、学校管理-招生资料，进行资料下载
+    [Tags]    重构中
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_招生资料下载
+
+glzx_内容管理_招生资料删除
+    [Documentation]    前提条件：管理中心账号存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、内容管理-营销资料，进行上传资料的删除操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_删除招生营销资料
+
+axx_课程资料上传与下载
+    [Documentation]    前置条件：校长存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、内容管理-课程资料，进行上传资料
+    ...
+    ...    3、前台校长登录爱学习系统
+    ...
+    ...    4、学校管理-课程资料，进行资料下载
+    ...
+    ...    5、后台用户登录管理中心
+    ...
+    ...    6、内容管理-课程资料，进行上传资料的删除操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_上传课程资料
+    Comment    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    Comment    axx_前台_学校管理
+    Comment    axx_课程资料下载
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_删除课程资料
+
+axx_培训
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_培训管理课程
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_培训
+    axx_前台_培训-报名
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    axx_glzx_报名审核
+    axx_前台用户登录    @{TeacherInfo}[1]    123456
+    axx_前台_培训
+    axx_前台_观看直播/回放
+
+glzx_基础数据-新建课程
+    [Documentation]    前置条件：后台管理存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、基础数据-课程，进行课程的新建操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_基础数据_新建课程    ${courseName}
+
+glzx_基础数据-添加班型
+    [Documentation]    前置条件：课程存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、基础数据-班型，进行班型的新建操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_基础数据_添加班型    ${courseName}    ${class_Num}
+    [Teardown]
+
+glzx_基础数据-新建课程(课程发布)
+    [Documentation]    前置条件：课程、班型存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、基础数据-课程，进行新建课程的发布操作
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_新建课程-课程发布    ${courseName}
+
+glzx_内容管理-添加课节
+    [Documentation]    前置条件：课程、班型存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、内容管理-课节管理，对应的班型-管理课节，对讲次上传课件、备课视频、课堂实录、教案等操作
+    [Tags]    功能更改
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_内容管理-课节管理
+    glzx_内容管理-添加课节讲次1
+    glzx_内容管理-添加课节讲次2
+
+glzx_内容管理_作业/专属题
+    [Documentation]    前置条件：课程、班型存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、内容管理-作业/专属题，对相应的班型进行作业以及专属题的配置
+    [Tags]    数据更改
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_作业/专属题
+    glzx_内容管理_作业
+    glzx_内容管理_专属题
+
+glzx_删除课程
+    [Documentation]    1.数据库删除班型数据
+    ...
+    ...    2.后台用户登录管理中心
+    ...
+    ...    3.基础数据-课程，进行课程的删除。数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    glzx_基础数据_删除班型    ${class_Num}    #连接数据库
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_基础数据_删除课程    ${courseName}
+
+glzx_DIY_知识点搜索
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理，进行知识点搜索
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    glzx_DIY_知识点搜索
+
+glzx_DIY_知识点新建题模/编辑/删除
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-知识点&题模，进行知识点题模的增加、编辑修改、删除
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    glzx_DIY_知识点新增题模
+    glzx_DIY_知识点编辑题模
+    glzx_DIY_知识点删除题模
+
+glzx_DIY_搜索题目
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行题目的搜索
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_搜索题目
+
+glzx_DIY_删除题目
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行题目的删除
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_删除题目
+
+glzx_DIY_上传题目讲解视频
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行题目的讲解视频的上传
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_上传题目讲解视频
+
+glzx_DIY_上传课件碎片
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行指定知识点课件的上传、编辑、删除操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_课件上传    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_上传相同课件报异常    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/ul/li[*]/span[2]/span[contains(text(),'自动化测试知识点2')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_课件编辑
+    glzx_DIY_课件更改知识点    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/ul/li[*]/span[2]/span[contains(text(),'自动化测试知识点1')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_课件删除
+    Comment    glzx_DIY_课件预览
+
+glzx_DIY_上传说课视频碎片
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行指定知识点说课视频的上传、预览、编辑、删除等操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_说课视频上传    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_说课视频预览
+    glzx_DIY_说课视频编辑
+    glzx_DIY_说课视频删除
+
+glzx_DIY_上传2013视频碎片
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行指定知识点2013视频的上传、预览、编辑、删除等操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_2013视频上传    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_2013视频预览
+    glzx_DIY_2013视频编辑
+    glzx_DIY_2013视频删除
+
+glzx_DIY_上传说课综述碎片
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行指定知识点说课综述的上传、预览、编辑、删除等操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_说课综述上传    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_说课综述预览
+    glzx_DIY_说课综述编辑
+    glzx_DIY_说课综述删除
+
+glzx_DIY_资源库基础设置
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行基础设置中各项的新增、编辑、删除等操作，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_资源库教材设置
+    glzx_DIY_资源库课件设置
+    glzx_DIY_资源库说课视频设置
+    glzx_DIY_资源库2013视频设置
+
+glzx_DIY_课程新增/修改/删除
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-课程，进行课程的新增、编辑、删除等操作，数据还原
+    [Tags]
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    课程
+    glzx_DIY_课程新增
+    glzx_DIY_课程修改
+    glzx_DIY_课程删除
+
+glzx_DIY_课程组合测试
+    [Documentation]    前置条件：知识点文件夹以及知识点已存在，知识点下有题目
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、课程管理-资源库，进行课件、说课视频、2013视频、说课综述碎片的上传
+    ...
+    ...    3、课程管理-课程，进行新增课程、添加讲次知识点、添加题模和题目、课程讲义查看、课件合成等操作，删除已建课程
+    ...
+    ...    4、课程管理-资源库，进行课件、说课视频、2013视频、说课综述碎片的删除。数据还原
+    [Tags]
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_课件上传    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[3]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_说课视频上传    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_2013视频上传    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[3]/button[2]
+    glzx_DIY_说课综述上传    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[2]/div/div[@id='gaosi-tree']/div[2]/div/ul/li[*]/span[2]/span[contains(text(),'自动化测试')]    //div[@id="root"]/following-sibling::div[5]/div/div[2]/div/div[1]/div[3]/button[2]
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    课程
+    glzx_DIY_课程新增
+    glzx_DIY_添加讲次知识点
+    glzx_DIY_添加题模和题目
+    glzx_DIY_课程讲义和课件合成
+    glzx_DIY_课程删除
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    资源库
+    glzx_DIY_资源库资源删除还原
+
+glzx_DIY_课程模板测试
+    [Documentation]    前置条件：有后台管理员账号
+    ...
+    ...    1、后台用户登录管理中心
+    ...
+    ...    2、对DIY中课程模板进行新增、编辑以及删除，数据还原
+    [Tags]
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_课程管理
+    DIY_一级菜单    课程
+    glzx_DIY_课程模板新增
+    glzx_DIY_课程模板编辑
+    glzx_DIY_课程模板删除
+
+glzx_内容管理_公告
+    [Documentation]    前置条件：有爱学习前台以及管理中心后台账户
+    ...
+    ...    1、登录管理中心,进入内容管理-公告菜单，新增一个公告
+    ...
+    ...    2、对后台新增的公告进行修改编辑
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_公告新增
+    glzx_内容管理_公告修改
+
+axx_校长首页_公告查看
+    [Documentation]    前置条件：管理中心新增了公告
+    ...
+    ...    登录前台校长首页查看该公告做一定的验证
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_校长首页
+    axx_校长首页_公告
+
+glzx_内容管理_公告删除
+    [Documentation]    登录管理中心，查看公告浏览量，删除公告，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_公告删除
+
+glzx_内容管理_学科介绍
+    [Documentation]    前置条件：爱学习前台和管理中心账号存在
+    ...
+    ...    1、登录管理中心，进入内容管理-学科介绍
+    ...
+    ...    2、对科目、学部进行新增
+    ...
+    ...    3、对学部版块进行新增、编辑、修改、上移、下移
+    ...
+    ...    4、对学部进行编辑
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_科目新增
+    glzx_内容管理_学部新增
+    glzx_内容管理_学部板块新增/编辑/删除
+    glzx_内容管理_学部编辑
+
+axx_校长首页_学科介绍查看
+    [Documentation]    前置条件：后台新增科目与学部
+    ...
+    ...    登录爱学习前台系统查看新增的科目与学部
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_校长首页
+    axx_校长首页_学科介绍
+
+glzx_内容管理_学科删除
+    [Documentation]    登录管理中心，删除科目，数据还原
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_科目删除
+
+glzx_内容管理_帮助
+    [Documentation]    前置条件：爱学习前台和管理中心账号存在
+    ...
+    ...    1、登录管理中心，进入内容管理-帮助
+    ...
+    ...    2、对一级和二级目录、帮助文章进行新增
+    ...
+    ...    3、对帮助文章进行编辑、修改
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_帮助文章分类新增
+    glzx_内容管理_帮助文章新增
+    glzx_内容管理_帮助文章修改
+
+axx_校长首页_帮助文章查看
+    [Documentation]    前置条件：后台新增科目与学部
+    ...
+    ...    登录爱学习前台系统查看新增帮助中心文章，进行点赞
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_校长首页
+    axx_校长首页_帮助中心
+
+glzx_内容管理_帮助删除
+    [Documentation]    登录管理中心，删除帮助文章，删除一级以及二级目录
+    [Tags]    finish
+    [Timeout]    10 minutes
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    管理中心_内容管理
+    glzx_内容管理_帮助文章删除
+
+test
+    axx_后台用户登录    @{ht_user}[0]    @{ht_user}[1]
+    glzx_培训管理课程
+    Comment    ${bg_starttime}    gettime
+    Comment    ${bm_endtime}    get time    \    now+3min
+    Comment    ${zb_endtime}    get time    \    now+6min
+
+axx_批量校长创建班级
+    [Documentation]    前置条件：教师存在
+    ...
+    ...    1.校长登录爱学习前台系统。
+    ...
+    ...    2.学校管理-班级管理-创建班级，创建班级时与教师进行关联
+    [Tags]    finish
+    [Setup]
+    [Template]
+    [Timeout]    10 minutes
+    axx_前台用户登录    @{jg_phone}[0]    @{jg_phone}[1]
+    axx_前台_学校管理
+    axx_前台_学校管理_班级管理-创建班级    ${bj_name}

@@ -1,0 +1,7 @@
+*** Settings ***
+Library           AppiumLibrary
+
+*** Keywords ***
+等待
+    [Arguments]    ${xpath}
+    Wait Until Page Contains Element    ${xpath}    15    error="12s timeOut,Can`t Find This Element !"

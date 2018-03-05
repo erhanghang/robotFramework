@@ -1,0 +1,2772 @@
+*** Settings ***
+Resource          基础动作.txt
+Resource          参数.txt
+Library           DatabaseLibrary
+Library           Selenium2Library
+Library           String
+
+*** Keywords ***
+axx_前台用户登录
+    [Arguments]    ${username}    ${userpwd}
+    打开浏览器选择    ${qt_url}
+    sleep    2
+    input text    id=username    ${username}
+    sleep    1
+    input text    id=password    ${userpwd}
+    click element    id=submit
+    截图    前台用户登录成功
+
+axx_前台_在线签约
+    [Documentation]    查询数据库有问题，后续待解决，目前设置延迟20s自己查询数据库
+    打开浏览器-gc    ${qt_url}
+    等待    //a[@class="nav-a qianyue"]
+    click element    //a[@class="nav-a qianyue"]
+    等待    //a[@class="yes_reach"]
+    click element    //a[@class="yes_reach"]
+    等待    id=telephone
+    input text    id=telephone    ${gl_phone}
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@id="safeCodeImage"]
+    \    sleep    1
+    \    Comment    ${url}    Get Element Attribute    //img[@id="safeCodeImage"]@src
+    \    Comment    ${tmp1}    Get Cookies
+    \    Comment    ${tmp2}    shibieCookies    ${tmp1}    ${url}
+    \    click element    id=getcode
+    \    ${tmp2}    Get Tishi    输入验证码：
+    \    input text    id=safeCode    ${tmp2}
+    \    ${tmp}    Get Mysql Item    SELECT * FROM `notify_record` WHERE contact='${gl_phone}' ORDER BY add_time DESC;    content    @{database}[0]    @{database}[1]
+    \    ...    @{database}[2]    @{database}[3]
+    \    input text    id=validateCode    ${tmp}
+    \    click element    //input[@value="下一步"]
+    \    Comment    click element    //img[@id="safeCodeImage"]
+    \    Comment    sleep    1
+    \    Comment    ${url}    Get Element Attribute    //img[@id="safeCodeImage"]@src
+    \    Comment    ${tmp}    Get Cookies
+    \    Comment    log    ${tmp}
+    \    Comment    ${tmp1}    shibieCookies    ${tmp}    ${url}
+    \    Comment    input text    id=safeCode    ${tmp1}
+    \    Comment    click element    //input[@value="获取验证码"]
+    \    sleep    2
+    \    ${res}    Run Keyword and return status    Page Should Contain    ${jg_name}
+    \    Exit For Loop If    ${res}
+    Comment    ${tmp}    Get Tishi    请输入图片验证码
+    Comment    input text    id=safeCode    ${tmp}
+    Comment    click element    //input[@value="获取验证码"]
+    Comment    sleep    20
+    Comment    ${tmp}    axx_查询验证码    ${gl_phone}
+    Comment    ${tmp}    Get Mysql Item    SELECT * FROM `notify_record` WHERE contact='${gl_phone}' ORDER BY add_time DESC;    content
+    Comment    input text    id=validateCode    ${tmp}
+    Comment    ${safeCode}    shibie    http://i.aixuexi.com:80/common/createSafeCode
+    Comment    sleep    15
+    Comment    input text    id=safeCode    xjnf
+    Comment    click element    id=getcode
+    Comment    Comment    ${validateCode}
+    Comment    input text    id=validateCode    963645
+    Comment    click element    //input[@value="下一步"]
+    sleep    2
+    等待    //input[@value="我同意该协议>"]
+    click element    //input[@value="我同意该协议>"]
+    等待    //div[contains(text(),'银行转账')]
+    click element    //div[contains(text(),'银行转账')]
+    click element    //button[contains(text(),'发送转账信息到手机')]
+    截图    发送转账信息
+    浏览器提示框确认    短信发送成功
+
+axx_前台_申请试用
+    [Arguments]    ${shiyong_phone}    # 试用机构手机号
+    打开浏览器-gc    ${qt_url}
+    等待    //a[@class="js-apply apply maidian_ajax_page"]
+    click link    //a[@class="js-apply apply maidian_ajax_page"]
+    sleep    2
+    select frame    //iframe[@src="http://i.aixuexi.com/apply"]
+    等待    //input[@name="telphone"]
+    input text    //input[@name="telphone"]    ${shiyong_phone}
+    等待    //input[@name="insName"]
+    input text    //input[@name="insName"]    试用自动化机构${threeNUM}
+    sleep    1
+    select from list    id=province    江苏
+    sleep    1
+    select from list    id=city    苏州市    #直辖区
+    sleep    1
+    等待    id=area
+    select from list    id=area    吴江市
+    截图    试用机构录入界面
+    等待    //input[@id="cooBtn"]
+    click element    //input[@id="cooBtn"]
+    sleep    1
+    截图    试用机构提交成功界面
+
+axx_前台_备课
+    sleep    3
+    页面存在就点击    //div[@class="common-mask-content"]/span    #关闭弹出广告
+    sleep    1
+    等待    //a[@href="http://bk.aixuexi.com"]
+    click element    //a[@href="http://bk.aixuexi.com"]
+    sleep    3
+    截图    进入备课
+
+axx_前台_备课-课件视频
+    页面存在就点击    //div[@class="password-mask"]/div[@class="ui-dialog-close"]
+    页面存在就点击    //div[@class="guide-bookversion-main"]/span
+    sleep    5
+    等待    //dd[@class="gradeList"]/a[contains(text(),'一年级')]
+    click element    //dd[@class="gradeList"]/a[contains(text(),'一年级')]    #点击一年级
+    等待    //dd[@class="periodList"]/a[contains(text(),'暑假')]
+    click element    //dd[@class="periodList"]/a[contains(text(),'暑假')]    #点击暑假
+    等待    //div[@class="classType english"]/ul/li[1]/a
+    click element    //div[@class="classType english"]/ul/li[1]/a    #点击班型名称
+    sleep    1
+    click element    //h1[@class="title coure-calsslist"]/following-sibling::div/ul/li[1]/a
+    sleep    2
+    select window    new
+    sleep    2
+    截图    教师讲义
+    click element    //a[@class="maidian_ajax_page nav-btn jiaoan"]    #//a[@class="jiaoan"]课件
+    sleep    8
+    截图    课件
+    click element    //a[@class="maidian_ajax_page nav-btn beike"]    #说课视频
+    sleep    8
+    截图    课件视频
+    click element    //ul[@id='fixed-layer']/li[4]/ul/li[1]/a    #课堂实录
+    sleep    8
+    截图    课堂实录
+    Comment    close browser
+    select window    main
+
+axx_前台_备课-学员作业
+    click element    //span[contains(text(),'学员作业')]    #学员作业
+    sleep    3
+    截图    学员作业
+
+axx_前台_备课-学科介绍
+    click element    //a[@href="http://bk.aixuexi.com/#/introduction"]    #学科介绍
+    sleep    3
+    截图    学科介绍
+
+axx_前台_备课-培训中心
+    click element    //a[contains(text(),'培训中心')]
+    sleep    1
+    截图    培训中心
+
+axx_前台_授课
+    sleep    3
+    页面存在就点击    //div[@class="password-mask"]/div[@class="ui-dialog-close"]
+    等待    //a[@href="http://ke.aixuexi.com"]
+    click element    //a[@href="http://ke.aixuexi.com"]
+    sleep    3
+    截图    进入授课
+
+axx_前台_授课_讲次
+    [Arguments]    ${className}    ${classJc}    #班级|讲次
+    Comment    wait until element is visible    //a[@class="modules-changeClass"]
+    Comment    click element    //a[@class="modules-changeClass"]
+    wait until element is visible    //div[contains(text(),'${className}') and @class="module-className"]
+    sleep    2
+    click element    //div[contains(text(),'${className}') and @class="module-className"]
+    sleep    2
+    截图    讲次
+    wait until element is visible    //div[@class="module-lessonList"]/ul/li[${classJc}]
+    sleep    2
+    click element    //div[@class="module-lessonList"]/ul/li[${classJc}]    #最后括号1为第一讲，2为第二讲
+    sleep    1
+
+axx_前台_授课_讲次_点名
+    select window    new
+    截图    未点名
+    wait until element is visible    //ul[@class="call-content-static-list"][1]/li[4]/span
+    click element    //ul[@class="call-content-static-list"][1]/li[4]/span    #点名-点名已到
+    sleep    2
+    wait until element is visible    //ul[@class="call-content-static-list"][2]/li[3]/span
+    click element    //ul[@class="call-content-static-list"][2]/li[3]/span    #点名-点名未到
+    sleep    2
+    wait until element is visible    //ul[@class="call-content-static-list"][3]/li[4]/span
+    click element    //ul[@class="call-content-static-list"][3]/li[4]/span    #点名-点名已到
+    截图    未点名1已到2
+    click element    //a[@class="call-result"]    #提交点名信息
+    click element    //div[@class="module-right-call"]/div/div[2]/div[@class="module-dialog-main"]/div[@class="dialog-buttons"]/button[1]    #确定
+    Comment    等待    //div[@class="call-content-active-success"]
+    sleep    2
+    page should contain    点名提交成功 ！
+    sleep    2
+    截图    点名提交完成
+
+axx_前台_授课_讲次_增删学员
+    [Arguments]    ${stuName}    ${stuMobile}
+    等待    //ul[@class="left-menu but-score"]/li/a
+    click element    //ul[@class="left-menu but-score"]/li/a    #点击增删学员
+    sleep    2
+    截图    增删学员
+    click element    //label[@class="operation-add-student"]    #点击添加学员
+    input text    //ul[@class="operation-edit-content"]/li[@class="operation-stu-name"]/input[@name="stuName"]    ${stuName}    #输入学员姓名
+    input text    //ul[@class="operation-edit-content"]/li[@class="operation-phone"]/input[@name="stuMobile"]    ${stuMobile}    #输入家长手机号
+    等待    //ul[@class="operation-edit-content"]/li[@class="operation-class-type"]/span/input[@id="current"]
+    click element    //ul[@class="operation-edit-content"]/li[@class="operation-class-type"]/span/input[@id="current"]
+    截图    增加学员录入
+    click element    //div[@class="operation-add-stu"]/button
+    sleep    3
+    Wait Until Page Contains    ${stuMobile}
+    page should contain    ${stuMobile}
+    截图    增加学员完成
+    sleep    2
+    click element    //td[contains(text(),'小学生')]/following-sibling::td[4]/span[contains(text(),'移出')]    #点击移出
+    sleep    2
+    等待    //div[@class="student-operation-wrap"]/div[3]/div[2]/div[3]/button[1]
+    click element    //div[@class="student-operation-wrap"]/div[3]/div[2]/div[3]/button[1]    #确定
+    sleep    5
+    Wait Until Page Does Not Contain    ${stuMobile}
+    page should not contain    ${stuMobile}
+    截图    删除学员完成
+
+axx_前台_授课_讲次_本讲课件
+    click element    //li[@class="arrow arrow-down"]    #本讲上课
+    sleep    5
+    Comment    click element    //div[@class="fullscreen-content"]
+    Comment    sleep    2
+    Comment    截图    课件
+    Comment    页面存在就点击    //div[@class="guide-unfullscreen"]
+    Comment    页面存在就点击    //li[@class="last-homework"]/a
+    Comment    sleep    2
+    Comment    截图    上讲作业
+    click element    //li[@class="random-questions"]/a
+    sleep    5
+    截图    随机提问
+    等待    //ul[@class="change-addscore"]/li[1]    #加1分
+    click element    //ul[@class="change-addscore"]/li[1]
+    sleep    1
+    等待    //a[@class="change-action"]    #换一换
+    click element    //a[@class="change-action"]
+    sleep    1
+    等待    //ul[@class="change-addscore"]/li[2]    #加2分
+    click element    //ul[@class="change-addscore"]/li[2]
+    页面存在就点击    //a[@class="module-close"]
+    click element    //li[@class="addScores"]/a
+    sleep    1
+    截图    随机提问加分
+    页面存在就点击    //div[@class="img2"]
+    sleep    1
+    页面存在就点击    //div[@class="tishi"]/a
+    sleep    1
+    click element    //ul[@class="module-student-list"]/li[1]/a
+    sleep    1
+    截图    积分榜手动加分
+    click element    //a[@class="module-close"]
+    click element    //li[@class="scoreboard"]/a
+    sleep    1
+    截图    积分榜
+    等待    //a[@class="module-close"]
+    click element    //a[@class="module-close"]
+    click element    //li[@class="goback"]/a
+    select window    main
+
+axx_前台_授课-授课?
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    Click Element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    等待    //li[@class="currentLesson"]
+    click element    //li[@class="currentLesson"]
+    Select Window    new
+    click element    //div[@class="quanping-content"]
+    click element    id=kejian
+    sleep    2
+    Log To Console    he1
+    Select Frame    tag=iframe
+    Log To Console    he2
+    Comment    Select Frame    //*[@id="moduleId"]/div[3]/div[1]/iframe[1]
+    click element    //button[contains(text(),'下一页')]
+    click element    //li[@class="btn homework changePic js-leftbtn"]
+    click element    //ul[@class="addnow_tit"]/li[2]
+    click element    //ul[@class="addnow_tit"]/li[3]
+    sleep    5
+    click element    id=questionBtn
+    sleep    12
+    click element    //span[@class="score score1"]
+    click link    id=change
+    sleep    5
+    click element    //span[@class="score score3"]
+    click link    id=closeQuestion
+    sleep    5
+    click element    id=addScores
+    click element    //div[@class="jf_students"]/ul/li[2]
+    sleep    5
+    click element    //a[@class="jiajifenClose"]
+    sleep    5
+    click element    id=integralBtn
+    sleep    5
+    click element    //a[@class="rankingClose"]
+    sleep    3
+    click element    //li[@class="goback"]/a
+    sleep    5
+    select
+    click element    //span[@class="sameheader-username"]
+    click element    //a[contains(text(),'退出')]
+
+axx_前台_学校管理
+    sleep    3
+    页面存在就点击    //div[@class="common-mask-content"]/span    #关闭弹出广告
+    Comment    页面存在就点击    //div[@class="password-mask"]/div[@class="ui-dialog-close"]
+    sleep    1
+    等待    //a[@href="http://xuexiao.aixuexi.com"]
+    click element    //a[@href="http://xuexiao.aixuexi.com"]
+    截图    打开学校管理
+
+axx_前台_学校管理_班级管理-创建班级
+    [Arguments]    ${className}
+    页面存在就点击    //div[@class="clos_ioc"]
+    Comment    等待    //div[@class="password-mask"]/div
+    Comment    click element    //div[@class="password-mask"]/div
+    click link    //a[contains(text(),'班级管理')]
+    sleep    3
+    等待    //div[@class="create-class"]/a/button/span[contains(text(),'创建班级')]
+    click element    //div[@class="create-class"]/a/button/span[contains(text(),'创建班级')]
+    sleep    4
+    等待    //div[@class="wt-box"]/div[3]/div/div[1]/div[1]/div/div/input
+    click element    //div[@class="wt-box"]/div[3]/div/div[1]/div[1]/div/div/input    #班型
+    sleep    2
+    等待    //form/div[1]/div/div/div[1]/input
+    click element    //form/div[1]/div/div/div[1]/input    #学科
+    sleep    0.5
+    click element    //div[5]/div/div[1]/ul/li[1]    #小学数学
+    sleep    0.5
+    click element    //form/div[2]/div/div/div[1]/input    #年级
+    sleep    0.5
+    click element    //div[6]/div/div[1]/ul/li[1]    #一年级
+    sleep    0.5
+    click element    //form/div[3]/div/div/div[1]/input    #班型
+    sleep    0.5
+    click element    //div[7]/div/div[1]/ul/li[*]/span[contains(text(),'高斯数学一年级培优体系（2课时新）')]
+    sleep    0.5
+    click element    //form/div[4]/div/div/button[2]    #确定
+    sleep    1
+    click element    //div[@class="wt-box"]/div[3]/div/div[2]/div/div/label/span[1]/span    #暑假
+    click element    //div[@class="wt-box"]/div[3]/div/div[3]/div/div/div[2]/input    #主讲老师
+    sleep    1
+    focus    //div[7]/div/div[1]/ul/li[*]/span[contains(text(),'@{TeacherInfo}[0]')]
+    click element    //div[7]/div/div[1]/ul/li[*]/span[contains(text(),'@{TeacherInfo}[0]')]    #选择老师
+    sleep    2
+    click element    //div[@class="wt-box"]/div[3]/div/div[3]/span    #点击收回主讲老师下拉列表
+    sleep    0.5
+    input text    //div[@class="wt-box"]/div[3]/div/div[4]/div/div/input    ${className}
+    click element    //div[@class="wt-box"]/div[4]/div/div/div[1]/input    #校区选择
+    sleep    0.5
+    click element    //div[8]/div/div[1]/ul/li[*]/span[contains(text(),'总校区')]    #总校区
+    sleep    0.5
+    click element    //div[@class="wt-box"]/div[5]/div/div/input    #开课日期
+    sleep    1
+    click element    //table[@class="el-date-table"]/tbody/tr[*]/td[contains(text(),'今天')]
+    sleep    1
+    click element    //div[@class="wt-box"]/div[6]/div[1]/div/input    #结课日期
+    sleep    3
+    focus    //div[10]/div[1]/div/div[1]/button[@class="el-picker-panel__icon-btn el-date-picker__next-btn el-icon-d-arrow-right"]
+    click element    //div[10]/div[1]/div/div[1]/button[@class="el-picker-panel__icon-btn el-date-picker__next-btn el-icon-d-arrow-right"]    #点击》
+    sleep    2
+    click element    //div[10]/div/div/div[2]/table[@class="el-date-table"]/tbody/tr[*]/td[contains(text(),'15')]    #点击15号
+    sleep    1
+    click element    //div[@class="wt-box"]/div[7]/div/div[1]/div/label/span[1]/span    #每天
+    sleep    0.5
+    click element    //div[@class="wt-box"]/div[7]/div[2]/div/div[1]/div/div[1]/input
+    sleep    0.5
+    click element    //div[11]/div/div[1]/ul/li[6]/span    #六期
+    sleep    0.5
+    click element    //div[@class="class-time-list"]/div[2]/div[1]/div/div/input
+    sleep    1
+    click element    //div[12]/div/div[1]/ul/li[1]    #7点
+    sleep    0.5
+    click element    //div[@class="class-time-list"]/div[2]/div[3]/div/div/input
+    sleep    0.5
+    click element    //div[13]/div/div[1]/ul/li[1]    #00
+    sleep    1
+    click element    //div[@class="class-time-list"]/div[2]/div[5]/div/div/input
+    sleep    1
+    click element    //div[14]/div/div[1]/ul/li[3]    #9点
+    sleep    1
+    click element    //div[@class="class-time-list"]/div[2]/div[7]/div/div/input
+    sleep    0.5
+    click element    //div[15]/div/div[1]/ul/li[1]    #00
+    sleep    1
+    截图    录入班级信息
+    sleep    1
+    click element    //div[@class="create-class-button"]/button[1]/span[contains(text(),'创建班级')]    #点击创建班级
+    Comment    sleep    5
+    Comment    input text    //div[@class="class-filter"]/div[1]/input    ${className}    #搜索对应班级
+    Comment    sleep    2
+    Comment    click element    //div[@class="class-filter"]/button[1]    #点击搜索按钮
+    sleep    5
+    Page Should Contain    ${className}
+    Comment    等待    //div[@class="el-tabs"]/div[@class="el-tabs__content"]/div[1]/div/div[3]/table/tbody/tr/td[1]/div
+    Comment    ${name}    gettext    //div[@class="el-tabs"]/div[@class="el-tabs__content"]/div[1]/div/div[3]/table/tbody/tr/td[1]/div
+    Comment    sleep    2
+    Comment    Should Be Equal As Strings    ${name}    ${className}
+    截图    创建班级完成
+
+axx_前台_学校管理_学员管理-录入学员
+    [Arguments]    ${stu_grade}    ${stu_class}    # 年级|班级名称
+    [Documentation]    * 调用该关键字，需要传入两个参数，<学生手机号>、<学生班级名称>
+    ...    *手机号是唯一的，班级名称为已存在的
+    [Tags]
+    [Timeout]
+    页面存在就点击    //div[@class="clos_ioc"]
+    Comment    等待    //div[@class="password-mask"]/div
+    Comment    click element    //div[@class="password-mask"]/div
+    click element    //a[contains(text(),'学员管理')]    #学员管理
+    sleep    3
+    等待    //div[@class="create-student"]/a[1]/button/span[contains(text(),'录入学员')]
+    click element    //div[@class="create-student"]/a[1]/button/span[contains(text(),'录入学员')]
+    : FOR    ${i}    IN RANGE    3
+    \    等待    //form[@class="el-form el-form--inline"]/div[2]/div/div/div/div/input
+    \    input text    //form[@class="el-form el-form--inline"]/div[2]/div/div/div/div/input    ${code}自动化学生00${i+1}    #学生姓名
+    \    sleep    1
+    \    input text    //form[@class="el-form el-form--inline"]/div[3]/div/div/div/div/input    1830000100${i+4}    #家长电话
+    \    click element    //form[@class="el-form el-form--inline"]/div[3]/div/div[2]/div/div/div[1]/input    #关系
+    \    sleep    1
+    \    click element    //div[4]/div/div[1]/ul/li[1]/span[contains(text(),'父亲')]    #父亲
+    \    sleep    1
+    \    click element    //form[@class="el-form el-form--inline"]/div[4]/div/div/div/button    #班级
+    \    sleep    2
+    \    click element    //table[@class="el-table__body"]/tbody/tr[1]/td[1]/div/label/span[1]/span    #选择班级
+    \    sleep    0.5
+    \    click element    //button[@class="el-button c-confirm-button el-button--primary"]    #确定按钮
+    \    sleep    0.5
+    \    click element    //form[@class="el-form el-form--inline"]/a    #更多
+    \    sleep    2
+    \    click element    //form[@class="el-form el-form--inline"]/div[6]/div[1]/div/div/div/div/div[1]/input    #在校年级
+    \    sleep    0.5
+    \    click element    //div[5]/div/div[1]/ul/li[1]/span[contains(text(),'一年级')]    #一年级
+    \    sleep    2
+    \    click element    //form[@class="el-form el-form--inline"]/div[7]/div/div/div/button    #录入
+    \    sleep    2
+    \    page should contain    录入学员成功!
+    \    截图    录入学员信息完成${i+1}
+    \    sleep    2
+    \    等待    //button[@class="el-button el-button--primary"]
+    \    click element    //button[@class="el-button el-button--primary"]    #继续录入学员
+
+axx_前台_学校管理_学员管理-批量录入学员
+    sleep    1
+    click link    //a[@href="/index.php/student/index"]
+    click element    //a[@data-href="/index.php/student/multiAddStudent"]
+    ${classTime}    get text    //span[@class="name f14"]/following-sibling::div[2]
+    log    ${classTime}
+    click element    //div[@data-value="${classTime}"]
+    click element    //div[@name="period"][contains(text(),'${seasonalType}')]
+    sleep    3
+    click element    //div[@name="sparr"][contains(text(),'${educationType}@{TeacherInfo}[3]')]
+    click element    //a[@href="javascript:;"][contains(text(),'下载学员信息表')]
+    sleep    5
+
+axx_前台_学校管理_账号管理-新建教师
+    [Arguments]    @{TeacherInfo}
+    [Documentation]    填写方式如下：
+    ...    6个字段
+    ...    1.姓名<改参数code>，2.手机号<改参数fiveNUM及threeNUM>，3.性别<默认男>，
+    ...    4.科目<默认数学>，5.宣传姓名<无需变更>，6.全职/兼职<默认兼职>
+    ...
+    ...    如果需要新增不同学科的账号，可直接输入相对应的字段值
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    click link    //a[@href="/index.php/user/index"]
+    等待    //a[@href="/index.php/user/add"]
+    click link    //a[@href="/index.php/user/add"]
+    等待    //input[@id="realName"]
+    input text    //input[@id="realName"]    @{TeacherInfo}[0]    #姓名
+    input text    //input[@id="telephone"]    @{TeacherInfo}[1]    #电话
+    等待    //div[@data-value="teacher"]
+    click element    //div[@data-value="teacher"]    #选择教师
+    wait until element is visible    //div[contains(text(),'@{TeacherInfo}[2]')]
+    click element    //div[contains(text(),'@{TeacherInfo}[2]')]
+    click element    //div[contains(text(),'@{TeacherInfo}[3]')]
+    sleep    2
+    wait until element is visible    //div[contains(text(),'数学')]/following-sibling::div[@class="gradeList"]/div[2]/span[contains(text(),'小学')]/following-sibling::div[@class="fl gradeListInfo"]/div[1]
+    click element    //div[contains(text(),'数学')]/following-sibling::div[@class="gradeList"]/div[2]/span[contains(text(),'小学')]/following-sibling::div[@class="fl gradeListInfo"]/div[1]    #授课年级
+    页面存在就点击    //div[@id="content:setVersionDialog"]/div/div[2]/a    #点击确定
+    input text    //input[@name="nickname"]    @{TeacherInfo}[4]    #宣传名
+    sleep    1
+    click element    //div[contains(text(),'@{TeacherInfo}[5]')]    #全职
+    截图    录入教师账号信息
+    sleep    1
+    click element    //a[@id='addUser']    #提交
+    sleep    2
+    等待    //button[@class="aui_state_highlight" and contains(text(),'确定')]
+    click button    //button[@class="aui_state_highlight" and contains(text(),'确定')]    #确定按钮
+    sleep    5
+    Page Should Contain    新账号创建成功
+    截图    创建教师完成
+
+axx_前台_学校管理_购买教材
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    等待    //a[@href="/index.php/shop/index"]
+    click link    //a[@href="/index.php/shop/index"]
+    截图    购买教材界面
+    click link    //a[contains(text(),'小学语文')]
+    sleep    1
+    click link    //a[contains(text(),'春季')]
+    sleep    1
+    click link    //a[contains(text(),'全国版')]
+    sleep    1
+    截图    购买教材筛选页
+    click element    //p[contains(text(),'购买')][1]    #购买
+    input text    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/div[2]/table[1]/tbody/tr[1]/td[3]/input    1    #数量
+    input text    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/div[2]/table[2]/tbody/tr[1]/td[3]/input    2
+    click element    //a[contains(text(),'加入购物车')][1]    #加入购物车
+    等待    //a[@data-href="/shop/settlement"]
+    click element    //a[@data-href="/shop/settlement"]    #去结算
+    sleep    8
+    等待    //div[@class="clear peple_info_show"]
+    页面存在就点击    //div[@class="clear peple_info_show"]/ul/li[1]/p
+    等待    //input[@class="peple_name newInput"]
+    input text    //input[@class="peple_name newInput"]    收货人
+    sleep    2
+    Select From List    //*[@id="province"]    北京市
+    sleep    2
+    Select From List    //*[@id="city"]    市辖区
+    sleep    2
+    Select From List    //*[@id="area"]    海淀区
+    input text    //input[@name="address"]    收货人收货人收货人收货人收货人地址
+    input text    //input[@name="consigneePhone"]    15015015010
+    click element    //div[@class="peple_info"]/ul/li[5]/div/a    #确认收货地址
+    等待    //input[@id="shentong"]
+    click element    //input[@id="shentong"]    #申通
+    截图    订单录入信息
+    sleep    2
+    等待    //p[@class="fl submit_orders_btn"]
+    click element    //p[@class="fl submit_orders_btn"]    #提交订单
+    等待    //button[contains(text(),'确定提交')]
+    click element    //button[contains(text(),'确定提交')]
+    sleep    5
+    等待    //a[contains(text(),'查看订单')]
+    截图    订单下单成功
+    click element    //a[contains(text(),'查看订单')]
+    sleep    5
+    等待    //p[contains(text(),'商品清单')]
+    截图    订单详情界面
+
+axx_前台_学校管理_密码修改
+    [Arguments]    ${oldpasswd}    ${newpasswd}    # 旧密码|新密码
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    sleep    1
+    等待    //span[@class="sameheader-username"]
+    mouse over    //span[@class="sameheader-username"]
+    click element    //span[@class="sameheader-username"]
+    Comment    sleep    0.5
+    focus    //a[contains(text(),'修改密码')]
+    click element    //a[contains(text(),'修改密码')]
+    sleep    1
+    等待    //input[@name="oldPassword"]
+    input text    //input[@name="oldPassword"]    ${oldpasswd}
+    input text    //input[@name="newPassword"]    ${newpasswd}
+    input text    //input[@name="newPassword2"]    ${newpasswd}
+    sleep    1
+    截图    密码录入界面
+    click element    //img[@onclick="$('#threeFrom').submit()"]
+    sleep    1
+    截图    密码修改完成
+
+axx_后台用户登录
+    [Arguments]    ${htuser}    ${htuserpwd}
+    打开浏览器选择    ${ht_url}
+    input text    id=userName    ${htuser}
+    input text    id=passWord    ${htuserpwd}
+    click element    //input[@value="登录"]
+    等待    //div[1]/div/div/a
+    ${title}    get text    //div[1]/div/div/a
+    Should Be Equal As Strings    ${title}    高思互联网产品管理中心
+    截图    后台用户登录成功
+
+axx_后台_销售管理_客户管理_创建机构
+    [Arguments]    ${org_name}    ${org_phone}    # 机构名称|校长手机号
+    等待    //a[@href="/area/list"]    #销售管理
+    click link    //a[@href="/area/list"]
+    等待    //a[@href="/institution/list"]    #客户管理
+    click link    //a[@href="/institution/list"]
+    等待    //a[@onclick="add()"]
+    click link    //a[@onclick="add()"]
+    等待    //input[@name="institutionType"][1]
+    Select Radio Button    institutionType    1
+    Select From List    //*[@name="managers[0].manageId"]    ${ht_username}
+    Select From List    //*[@name="provinceId"]    北京市
+    sleep    2
+    Select From List    //*[@name="cityId"]    市辖区
+    sleep    2
+    Select From List    //*[@name="areaIdReal"]    海淀区
+    input text    //*[@name="signStartDate"]    2016-11-28\r\n
+    input text    //*[@name="signEndDate"]    2017-11-28\r\n
+    input text    //*[@name="signInfo.managerName"]    ${code}自动化管理员${threeNUM}
+    input text    //*[@name="signInfo.managerPhone"]    ${org_phone}
+    input text    //*[@id="2_tt"]    1
+    input text    //*[@id="3_tt"]    1
+    input text    //*[@id="4_tt"]    2
+    input text    //*[@id="5_tt"]    0
+    input text    //*[@id="6_tt"]    0
+    input text    //*[@id="7_tt"]    0
+    input text    //*[@id="8_tt"]    0
+    click element    //*[@id="zhuanzhang"]
+    input text    //*[@name="signInfo.payComment"]    我可以免费创建！
+    click element    //input[@name="legalPersonIdCard"]
+    文件上传-gc    身份证.png
+    sleep    3
+    click element    //input[@name="businessLicense"]
+    文件上传-gc    营业执照.png
+    sleep    3
+    click element    //input[@name="schoolLicense"]
+    文件上传-gc    办学许可.png
+    sleep    3
+    click element    //input[@name="disclaimerLicense"]
+    文件上传-gc    免责申明.png
+    sleep    3
+    input text    //*[@name="contact.name"]    ${code}自动化校长${threeNUM}
+    input text    //*[@name="contact.telephone"]    ${org_phone}
+    input text    //*[@name="contact.homePhone"]    0105958556
+    Select From List    //*[@name="contact.positionCode"]    校长
+    input text    //*[@name="contact.email"]    test@163.com
+    input text    //*[@name="insName"]    ${org_name}
+    input text    //*[@name="invoice"]    ${code}自动化测试机构名称发票${threeNUM}
+    input text    //*[@name="empNumber"]    1000
+    click element    //*[@name="operatingRanges[0].subjectProductId"]
+    click element    //*[@ name="subjectVersionIns[0].subjectId"]
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[0].id"]    人教版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[1].id"]    北师版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[2].id"]    沪教版
+    sleep    1
+    click element    //input[@type="checkbox" and @name="spExamArea" and @value="22-11"]    #北京
+    click element    //input[@type="checkbox" and @name="spExamArea" and @value="58-17"]    #外研英语
+    截图    创建机构信息
+    click element    //input[@type="button" and @class="ok" and @value="提交"]
+    sleep    2
+    click element    //button[@class="jbox-button jbox-button-focus"]
+    浏览器提示框确认    确定要创建一个测试机构
+    截图    创建机构信息
+    等待    //a[@class="comBtn"]
+    click element    //a[@class="comBtn"]
+    sleep    1
+
+axx_后台_销售管理_转正审批
+    等待    //a[@href="/recharge/list"]
+    click link    //a[@href="/recharge/list"]
+    等待    //a[@href="/tofull/list"]
+    click link    //a[@href="/tofull/list"]
+    等待    //td[contains(text(),'${jg_name}')]/following-sibling::td[7]/div/span/a
+    click element    //td[contains(text(),'${jg_name}')]/following-sibling::td[7]/div/span/a
+    等待    //select[@name="operatingCharge"]
+    Select From List    //select[@name="operatingCharge"]    ${ht_username}
+    Comment    click element    //input[@type="button"]
+    Comment    click button    //button[@class="jbox-button jbox-button-focus"]
+    截图    审批界面
+    click button    //input[@value="通过"]
+    sleep    1
+    click button    //button[@class="jbox-button jbox-button-focus"]
+    Page should contain    恭喜你,审核已经通过!
+    click element    //button[@value="ok"]
+    截图    审批通过
+
+axx_前台_在线商城
+    sleep    3
+    页面存在就点击    //div[@class="common-mask-content"]/span    #关闭弹出广告
+    sleep    1
+    等待    //a[@href="http://mall.aixuexi.com"]
+    click element    //a[@href="http://mall.aixuexi.com"]
+    Comment    截图    打开在线商城
+
+axx_前台_在线商城_购买教材
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    等待    //div[@class="el-input el-input-group el-input-group--append"]/input
+    input text    //div[@class="el-input el-input-group el-input-group--append"]/input    【高斯数学●小学】提高体系-秋季（人教版）
+    sleep    1
+    click element    //div[@class="el-input el-input-group el-input-group--append"]/div[@class="el-input-group__append"]/button    #点击搜索
+    sleep    2
+    click element    //span[@class="grade"]/span[contains(text(),'一年级')]    #选择年级
+    sleep    0.5
+    click element    //div[@class="el-input-number var-mid el-input-number--small"]/span[@class="el-input-number__increase"]    #增加数量
+    sleep    1
+    click element    //div[@class="el-input-number var-mid el-input-number--small"]/span[@class="el-input-number__decrease"]    #减少数量
+    sleep    1
+    click element    //button[@class="el-button btn-color el-button--default"]    #加入购物车
+    sleep    0.5
+    Page Should Contain    商品添加购物车成功!
+    sleep    2
+    click element    //div[@class="shopping-cart-show-button"]    #点击购物车
+    等待    //button[@class="el-button shopping-cart-button el-button--default"]
+    click element    //button[@class="el-button shopping-cart-button el-button--default"]    #点击结算
+    sleep    2
+    Comment    等待    //div[@class="account-recipient-list-right-del"]
+    Comment    页面存在就点击    //div[@class="account-recipient-list-right-del"]    #删除旧收货人地址
+    Comment    sleep    3
+    click element    //span[contains(text(),'添加新地址')]    #请添加收货地址
+    sleep    1
+    input text    //form/div[1]/div/div[1]/input    收货人
+    sleep    1
+    input text    //form/div[2]/div/div[1]/input    15015015010
+    sleep    1
+    click element    //form/div[3]/div/div[2]/div/div/div[1]/div[1]/input    #省
+    sleep    0.5
+    click element    //div[*]/div/div[1]/ul/li[*]/span[contains(text(),'北京市')]    #北京市
+    sleep    0.5
+    click element    //form/div[3]/div/div[4]/div/div/div[1]/div[1]/input    #市
+    sleep    0.5
+    click element    //div[*]/div/div[1]/ul/li[*]/span[contains(text(),'市辖区')]    #市辖区
+    sleep    0.5
+    click element    //form/div[3]/div/div[6]/div/div/div[1]/div[1]/input    #区
+    sleep    0.5
+    click element    //div[*]/div/div[1]/ul/li[*]/span[contains(text(),'海淀区')]    #海淀区
+    sleep    0.5
+    click element    //form/div[4]/div/div[1]/textarea
+    input text    //form/div[4]/div/div[1]/textarea    收货人收货人收货人收货人收货人地址    #收货人地址
+    sleep    0.5
+    click element    //div[@class="el-dialog__footer"]/span/button    #保存收货人地址
+    sleep    0.5
+    click element    //div[@class="account-recipient-inf clearfix"]/div[2]/div[2]/p/div/div    #选择收货人
+    sleep    0.5
+    Page Should Contain    收货地址设置成功
+    sleep    2
+    等待    //div[contains(text(),'顺丰速运')]
+    click element    //div[contains(text(),'顺丰速运')]    #配送方式
+    sleep    3
+    Comment    input text    //div[@class="delivery-recipient-phone clearfix"]/div[2]/div/input    15015015010
+    click element    //button/span[contains(text(),'提交订单')]    #提交订单
+    sleep    0.5
+    click element    //div[@class="el-dialog__footer"]/span/button[2]    #确认提交
+    sleep    3
+    Page Should Contain    订单提交成功
+    等待    //span[@class="order-num"]    #订单号
+    ${result}    gettext    //span[@class="order-num"]
+    ${order-num}    Get Substring    ${result}    4    #截取订单号
+    [Return]    ${order-num}
+
+axx_后台_商店管理_取消订单
+    [Arguments]    ${order-num}    # 订单号
+    等待    //a[@class="first shopManage"]
+    click link    //a[@class="first shopManage"]
+    等待    //a[contains(text(),'订单')]
+    click link    //a[contains(text(),'订单')]
+    input text    //form[@class="ant-form ant-form-horizontal"]/div[1]/div[3]/div/div[2]/div/div/input    ${order-num}
+    等待    //form[@class="ant-form ant-form-horizontal"]/div[3]/div/button[1]
+    click element    //form[@class="ant-form ant-form-horizontal"]/div[3]/div/button[1]
+    sleep    2
+    click element    //a[contains(text(),'取消订单')]
+    sleep    3
+    click element    //div/div[2]/div/div[1]/div[2]/div/div[2]/button[1]    #确认
+    sleep    5
+    ${result}    get text    //table/tbody/tr/td[7]
+    Should Be Equal As Strings    ${result}    已取消
+
+axx_授课?
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    等待    //li[@class="currentLesson"]
+    click element    //li[@class="currentLesson"]
+    Select Window    new
+    click element    //div[@class="quanping-content"]
+    click element    id=kejian
+    sleep    2
+    Log To Console    he1
+    Select Frame    tag=iframe    0
+    Log To Console    he2
+    Comment    Select Frame    //*[@id="moduleId"]/div[3]/div[1]/iframe[1]
+    click element    //button[contains(text(),'下一页')]
+    click element    //li[@class="btn homework changePic js-leftbtn"]
+    click element    //ul[@class="addnow_tit"]/li[2]
+    click element    //ul[@class="addnow_tit"]/li[3]
+    sleep    5
+    click element    id=questionBtn
+    sleep    12
+    click element    //span[@class="score score1"]
+    click link    id=change
+    sleep    5
+    click element    //span[@class="score score3"]
+    click link    id=closeQuestion
+    sleep    5
+    click element    id=addScores
+    click element    //div[@class="jf_students"]/ul/li[2]
+    sleep    5
+    click element    //a[@class="jiajifenClose"]
+    sleep    5
+    click element    id=integralBtn
+    sleep    5
+    click element    //a[@class="rankingClose"]
+    sleep    3
+    click element    //li[@class="goback"]/a
+    sleep    5
+    Comment    click element    //span[@class="sameheader-username"]
+    Comment    click element    //a[contains(text(),'退出')]
+
+axx_测评（预览、下载）
+    页面存在就点击    //div[@class="password-mask"]/div[@class="clos_ioc"]
+    sleep    3
+    等待    //a[@data-periodid="WINTER_SPRING"]
+    click element    //a[@data-periodid="WINTER_SPRING"]    #寒春
+    sleep    2
+    click element    //div[@class="subjectList"]/a[contains(text(),'小学数学')]    #小学数学
+    sleep    2
+    click element    //div[@class="groupList"]/a[contains(text(),'高斯数学（小学）培优体系测评')]    #测评
+    sleep    2
+    click element    //div[@class="gradeList"]/a[contains(text(),'一年级')]    #一年级
+    sleep    2
+    click element    //div[@class="paperList"]/ul[1]/li/ul/li[1]/a    #预览试卷
+    sleep    5
+    截图    预览试卷
+    等待    //a[@id="downloadPaper"]
+    click element    //a[@id="downloadPaper"]    #点击下载
+    sleep    2
+    Page Should Contain    文件生成中···
+
+axx_测评（录入、报告预览）
+    页面存在就点击    //div[@class="password-mask"]/div[@class="clos_ioc"]
+    sleep    1
+    等待    //a[@data-periodid="WINTER_SPRING"]    #寒春
+    click element    //a[@data-periodid="WINTER_SPRING"]
+    sleep    2
+    click element    //div[@class="subjectList"]/a[contains(text(),'小学数学')]    #学科
+    sleep    2
+    click element    //a[contains(text(),'高斯数学（小学）培优体系测评')]    #测评
+    sleep    2
+    click element    //div[@class="gradeList"]/a[contains(text(),'一年级')]    #一年级
+    sleep    2
+    click element    //a[@class="luru"]
+    sleep    2
+    等待    //input[@name="studentName"]
+    input text    //input[@name="studentName"]    王同学
+    input text    //input[@name="phone"]    17300000${threeNUM}
+    click element    //a[contains(text(),'母')]
+    sleep    3
+    click element    //ul[@class="std_ed"]/li[1]/div/a[1]
+    click element    //ul[@class="std_ed"]/li[2]/div/a[3]
+    click element    //ul[@class="std_ed"]/li[3]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[4]/div/input    13
+    input text    //ul[@class="std_ed"]/li[5]/div/input    3
+    click element    //ul[@class="std_ed"]/li[6]/div/a[3]
+    click element    //ul[@class="std_ed"]/li[7]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[8]/div/input    11
+    click element    //ul[@class="std_ed"]/li[9]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[10]/div/input    10
+    click element    //input[@id="saveAnswer"]    #提交答案
+    sleep    2
+    截图    录入答案
+    sleep    3
+    click element    //a[@id="downloadReport"]    #下载报告
+    等待    //div[@id="dialogClose"]/img
+    click element    //div[@id="dialogClose"]/img
+    click element    //a[contains(text(),'报告')]    #点击报告
+    sleep    3
+    等待    //span[@class="editRemark"]
+    click element    //span[@class="editRemark"]    #点击编辑
+    input text    //textarea    ${threeNUM}
+    click element    //input[@type="button" and @value="保存"]
+    click element    //input[@class="qt_baocun saveRemark"]
+    sleep    2
+    click element    //ul[@class="qt_home1_icon"]/li[5]/a
+    等待    //button[@class="aui_state_highlight"]
+    click element    //button[@class="aui_state_highlight"]
+
+axx_header按钮点击
+    [Documentation]    20行需要修改
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="http://bk.aixuexi.com"]
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="http://ke.aixuexi.com"]
+    等待    //a[@class="chaungjian"]
+    click element    //a[@class="chaungjian"]
+    等待    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //div[contains(text(),'男')]
+    click element    //div[contains(text(),'数学')]
+    sleep    1
+    click element    //span[contains(text(),'小学')]/following-sibling::div/div[1]
+    input text    //input[@name="nickname"]    校长亲自授课${threeNUM}
+    click element    //div[@class="add_teach"]/div[5]/div/div[1]
+    click element    //a[@id="saveEdit"]
+    sleep    2
+    click element    //button[@class="aui_state_highlight"]
+    sleep    2
+    click element    //a[@href="http://ke.aixuexi.com"]
+    sleep    5
+    click element    //a[@href="http://front.aixuexi.com"]
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click element    //a[@href="http://px.aixuexi.com"]
+    Comment    等待    //a[@class="btn btn-green signUp"]
+    Comment    click element    //a[@class="btn btn-green signUp"]
+    Comment    sleep    5
+    Comment    click element    //a[@class="gray cancelSign"]
+    Comment    sleep    1
+    等待    //a[@href="/reviewCourse?page=1"]
+    click element    //a[@href="/reviewCourse?page=1"]
+    等待    //div[@class="courseList"]/ul/li[1]/div[3]/a
+    click element    //div[@class="courseList"]/ul/li[1]/div[3]/a
+    Select Window    new
+    sleep    10
+    close window
+    Select Window
+    click link    //a[@class="homework"]
+    等待    //a[contains(text(),'查看近期课程')]
+    click element    //a[contains(text(),'查看近期课程')]
+    sleep    2
+    click element    //div[@class="message-title"]
+    sleep    2
+    click element    //div[@class="message-title"]
+
+axx_前台_基础设置
+    Comment    等待    //div[@class="password-mask"]/div
+    Comment    click element    //div[@class="password-mask"]/div
+    页面存在就点击    //div[@class="clos_ioc"]
+    等待    //a[@href="/index.php/version/index"]
+    click link    //a[@href="/index.php/version/index"]
+    等待    //a[@class="hetong"]
+    click element    //a[@class="hetong"]
+    等待    //a[@class="hetong-close"]
+    click element    //a[@class="hetong-close"]
+    click element    //td[contains(text(),'小学数学')]/following-sibling::td[2]/a    #点击修改
+    等待    //div[contains(text(),'北师版')]
+    click element    //div[contains(text(),'北师版')]
+    click element    //a[@id="saveCampus"]    #确定
+    sleep    5
+    click element    //a[@href="/index.php/campus/index"]    #校区设置
+    等待    //a[@class="cxiaoqu"]
+    click element    //a[@class="cxiaoqu"]    #新建校区
+    等待    //input[@class="ipt_active newInput"]
+    input text    //input[@class="ipt_active newInput"]    校区${threeNUM}
+    click element    //a[@id="saveCampus"]    #确定
+    ${temp}    run keyword and return status    page should contain element    //div[@class="aui_content"][contains(text(),'与已有校区名称相同')]
+    run keyword if    ${temp}    click button    //button[@class="aui_state_highlight"]    input text    //input[@class="ipt_active newInput"]    校区${threeNUM}分校1
+    ...    click element    //a[@id="saveCampus"]
+    等待    //li[@data-campusname="校区${threeNUM}"]/div[2]/a[2]
+    click element    //li[@data-campusname="校区${threeNUM}"]/div[2]/a[2]
+    等待    //button[contains(text(),'确定')]
+    click element    //button[contains(text(),'确定')]
+    sleep    5
+    wait until page does not contain    校区${threeNUM}
+    click element    //a[@href="/index.php/classtype/index"]    #班型设置
+    等待    //select[@name="grade"]
+    Select From List    //select[@name="grade"]    三年级
+    click element    //input[@class="submits comGreenBtn-small yh fl"]    #点击筛选
+    等待    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    input text    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[2]/input    班型${threeNUM}
+    click element    //a[@typecode="GSXS0301"]
+    Comment    ${temp}    get text    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/following-sibling::li[3]/div/ul[2]/li[3]/a
+    Comment    log    以下是打开当前班级
+    Comment    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/following-sibling::li[3]/div/ul[2]/li[3]/a
+    Comment    Select Window    new
+    Comment    sleep    10
+    Comment    close window
+    Comment    Select Window
+    Comment    click element    //a[@href="/index.php/basis/index"]
+
+axx_前台_购买教材
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="/index.php/shop/index"]
+    Comment    等待    //a[@href="/index.php/shop/index?sid=22"]
+    Comment    click element    //a[@href="/index.php/shop/index?sid=22"]
+    等待    //a[@href="/index.php/shop/index?sid=13"]
+    click element    //a[@href="/index.php/shop/index?sid=13"]    #初中化学
+    sleep    1
+    Comment    等待    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/p
+    click element    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/p    #购买
+    Comment    等待    //td[contains(text(),'一年级下册')]//following-sibling::td[2]/input
+    Comment    input text    //td[contains(text(),'一年级下册')]//following-sibling::td[2]/input    1
+    Comment    input text    //td[contains(text(),'二年级下册')]//following-sibling::td[2]/input    1
+    Comment    input text    //td[contains(text(),'三年级下册')]//following-sibling::td[2]/input    1
+    Comment    input text    //td[contains(text(),'四年级下册')]//following-sibling::td[2]/input    10
+    Comment    input text    //td[contains(text(),'五年级下册')]//following-sibling::td[2]/input    10
+    Comment    input text    //td[contains(text(),'六年级下册')]//following-sibling::td[2]/input    10
+    input text    //table[@class="fl sale_detail_table"]/tbody/tr/td[3]/input    2    #数量
+    click element    //a[@class="fr add_cart_btn js-addCart"]    #加入购物车
+    等待    //a[@id='gotoSettlement']
+    click element    //a[@id='gotoSettlement']    #去结算
+    sleep    5
+    click element    //input[@id="shunfeng"]    #顺丰快递
+    click element    //div[@id='mainContent']/div/div[2]/div[6]/table/tbody/tr/td[1]/input
+    click element    //div[@id='mainContent']/div/div[2]/div[6]/div[5]/div/p    #提交订单
+    等待    //button[contains(text(),'确定')]
+    click element    //button[contains(text(),'确定')]    #确认提交
+    Comment    sleep    5
+    Comment    click element    //a[@href="/index.php/classtype/index"]
+    Comment    等待    //select[@name="grade"]
+    Comment    Select From List    //select[@name="grade"]    三年级
+    Comment    click element    //input[@class="submits comGreenBtn-small yh fl"]
+    Comment    等待    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    Comment    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    Comment    input text    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[2]/input    班型${threeNUM}
+    Comment    click element    //a[@typecode="GSXS0301"]
+    Comment    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/following-sibling::li[3]/div/ul[2]/li[3]/a
+    Comment    Select Window    new
+    Comment    sleep    10
+    Comment    close window
+    Comment    Select Window
+    Comment    click element    //a[@href="/index.php/basis/index"]
+
+axx_前台_期中期末测评
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a    #关闭密码提示
+    页面存在就点击    //div[@class="clos_ioc"]
+    click element    //a[@href="/zootropolis/termtest.html"]    #期中期末测评
+    sleep    2
+    click element    //div[@class="selection-wrap"]/div[@class="select-line"]/div[2]/span[contains(text(),'期中')]    #时段
+    sleep    1
+    click element    //div[@class="selection-wrap"]/div[@class="select-line"]/div[2]/span[contains(text(),'小学数学')]    #学科
+    sleep    1
+    click element    //div[@class="selection-wrap"]/div[@class="select-line"]/div[contains(text(),'年级')]/following-sibling::div[1]/span[contains(text(),'一年级')]    #年级
+    sleep    1
+    click element    //div[@class="selection-wrap"]/div[@class="select-line"]/div[2]/span[contains(text(),'暑假')]    #学期
+    sleep    2
+    click element    //div[@class="selection-wrap"]/div[@class="select-line"]/div[2]/span[contains(text(),' \ 高斯数学一年级培优体系（2课时新）')]    #班型
+    sleep    2
+    等待    //div[@class="test-paper-wrap"]/div[3]/ul[2]/li
+    click element    //div[@class="test-paper-wrap"]/div[3]/ul[2]/li    #点击录入得分
+    sleep    2
+    等待    //input[@class="el-input__inner"]
+    click element    //input[@class="el-input__inner"]    #学生姓名
+    sleep    1
+    click element    //li[@data-v-73453bda]/span
+    sleep    1
+    click element    //div[@class="input-score-init"]/button[1]    #满分
+    sleep    1
+    focus    //button[contains(text(),'提交答案')]
+    click button    //button[contains(text(),'提交答案')]
+    sleep    5
+    wait until page contains    录入成功
+    Comment    等待    //button[@class="el-button el-button--default"]/span[contains(text(),'查看报告')]
+    等待    //div[@class="el-dialog el-dialog--tiny"]/div[3]/span/button[2]
+    click button    //div[@class="el-dialog el-dialog--tiny"]/div[3]/span/button[2]    #查看报告
+    sleep    1
+    select window    new
+    截图    期中期末测评报告
+
+glzx_培训管理课程
+    等待    //a[@class="first train"]
+    Click Element    //a[@class="first train"]    #培训管理
+    等待    //td[contains(text(),'自动化测试培训')]
+    Click Element    //td[contains(text(),'自动化测试培训')]/following-sibling::td[6]/a[contains(text(),'编辑')]    #点击编辑
+    sleep    2
+    select window    new
+    sleep    2
+    ${bgl_starttime}    get time    \    now
+    ${bg_starttime}    Get Substring    ${bgl_starttime}    0    16
+    ${bml_endtime}    get time    \    now+3min
+    ${bm_endtime}    Get Substring    ${bml_endtime}    0    16
+    ${zbl_endtime}    get time    \    now+6min
+    ${zb_endtime}    Get Substring    ${zbl_endtime}    0    16
+    sleep    1
+    click element    //input[@name='originalPrice']
+    input text    //font[@id='ctme']/input[1]    ${bg_starttime}    #报名开始时间
+    sleep    1
+    input text    //font[@id='ctme']/input[2]    ${bm_endtime}    #报名结束时间
+    sleep    1
+    input text    //form[@id='form1']/table[1]/tbody/tr[12]/td[2]/input[1]    ${bm_endtime}    #课程开始时间
+    sleep    1
+    input text    //form[@id='form1']/table[1]/tbody/tr[12]/td[2]/input[2]    ${zb_endtime}    #课程结束时间
+    sleep    1
+    click element    //input[@name='applicationNum']
+    Click Element    //form[@id='form1']/div/input    #提交
+    sleep    10
+    Page Should Contain    提交成功
+
+axx_前台_培训
+    click element    id=peixun
+    截图    打开培训
+
+axx_前台_培训-报名
+    Click Element    //span[contains(text(),'培训管理')]    #点击培训管理
+    sleep    3
+    等待    //div[@class="c-courseList-main-title"]/h3/span[2]
+    ${class_name}    gettext    //div[@class="c-courseList-main-title"]/h3/span[2]
+    Should Be Equal As Strings    ${class_name}    自动化测试培训
+    截图    培训管理展示
+    sleep    2
+    Click Element    //span[contains(text(),'全部课程')]    #点击全部课程
+    sleep    2
+    Click Element    //span[contains(text(),'自动化测试培训')]
+    sleep    1
+    Click Element    //button[@class="c-detail-main-btn c-detail-main-btn-able c-detail-main-btn-canbeClick"]    #点击报名
+    sleep    1
+    等待    //input[@placeholder="按名字搜索"]
+    input text    //input[@placeholder="按名字搜索"]    @{TeacherInfo}[0]
+    sleep    0.5
+    Click Element    //button[@class="el-button c-userList-searchBar-btn el-button--primary"]    #搜索
+    sleep    0.5
+    Click Element    //table[@class="el-table__body"]/tbody/tr/td[1]/div/label    #选择参训人员
+    sleep    0.5
+    ${user_name}    gettext    //div[@class="c-userList-wrap-right animated"]/ul/li/span
+    Should Be Equal As Strings    ${user_name}    @{TeacherInfo}[0]
+    Click Element    //button[@class="el-button c-userList-confirmBtn el-button--primary"]    #确认报名
+    sleep    2
+    Click Element    //div[@class="c-account-toolsBarR-RightBtn c-account-toolsBarR-RightBtn0"]/button    #确认支付
+    sleep    0.5
+    ${return_message}    gettext    //div[@class="el-message-box__message"]/p
+    Should Be Equal As Strings    ${return_message}    系统将在三个工作日内完成审核，请留意系统消息及短信通知。
+    截图    报名支付
+    Click Element    //button[@class="el-button el-button--default el-button--primary "]    #确定
+    sleep    2
+
+axx_glzx_报名审核
+    等待    //a[@href="/courseManage/courseManageList"]
+    Click Element    //a[@href="/courseManage/courseManageList"]    #点击培训管理
+    等待    //a[contains(text(),'报名管理')]
+    Click Element    //a[contains(text(),'报名管理')]    #点击报名管理
+    Comment    等待    //span[@id='select2-chosen-2']
+    Comment    Click Element    //span[@id='select2-chosen-2']    #机构
+    Comment    等待    //input[@id='s2id_autogen2_search']
+    Comment    input text    //input[@id='s2id_autogen2_search']    spa星源培训机构003
+    Comment    Click Element
+    等待    //form[@id='search']/div/div/span/input
+    input text    //form[@id='search']/div/div/span/input    @{TeacherInfo}[0]    #学员姓名
+    sleep    0.5
+    Click Element    //form[@id='search']/div/div/input    #点击筛选
+    sleep    2
+    Click Element    //form[@id='form2']/table/tbody/tr[2]/td[14]/a[contains(text(),'通过')]    #点击通过
+    sleep    1
+    ${result}    gettext    //div[@id='jbox-content']/div
+    Should Be Equal As Strings    ${result}    操作成功！
+    sleep    1
+    Click Element    //div[@id='jbox-state-state0']/div[2]/button    #确定
+    sleep    120
+
+axx_前台_观看直播/回放
+    等待    //span[contains(text(),'我的课程')]
+    Click Element    //span[contains(text(),'我的课程')]    #点击我的课程
+    sleep    2
+    等待    //button[@class="c-courseList-btn-onlive"]
+    Click Element    //div[@class="c-courseList-main-tools c-courseList-btn-marginTop"]/button    #观看直播
+    sleep    10
+    截图    观看培训直播
+    sleep    180
+    Select Window    title=爱学习-培训
+    等待    //span[contains(text(),'我的课程')]
+    Click Element    //span[contains(text(),'我的课程')]
+    sleep    2
+    等待    //div[@class="c-courseList-main-tools c-courseList-btn-marginTop"]/button
+    Click Element    //div[@class="c-courseList-main-tools c-courseList-btn-marginTop"]/button
+    等待    //div[@class="c-detail-main-BtnCtrl animated c-detail-main-BtnCtrlBeaufy"]/div/button
+    Click Element    //div[@class="c-detail-main-BtnCtrl animated c-detail-main-BtnCtrlBeaufy"]/div/button    #点击观看回放
+    sleep    2
+    截图    观看回放
+
+axx_前台_校长首页
+    sleep    3
+    页面存在就点击    //div[@class="common-mask-content"]/span    #关闭弹出广告
+    sleep    2
+
+glzx_内容管理_上传招生营销资料
+    等待    //a[@href="/resourceContent/marketingList"]
+    click link    //a[@href="/resourceContent/marketingList"]    #营销资料
+    等待    //div[@class="content layout"]/div[2]/a
+    click element    //div[@class="content layout"]/div[2]/a    #新建文件夹
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    input text    //input[@name="realName"]    自动化测试营销资料    #文件夹名字
+    select from list    id=subjectId    初中数学    #选择课程
+    click element    //input[@onclick="submitForm();"]    #保存
+    unselect frame
+    sleep    3
+    page should contain    自动化测试营销资料
+    等待    //a[contains(text(),'自动化测试营销资料')]
+    click element    //a[contains(text(),'自动化测试营销资料')]
+    sleep    1
+    click element    //div[@class="content layout"]/div[2]/a[contains(text(),"上传文件")]    #上传文件
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    等待    //input[@id='pickfiles']
+    click element    //input[@id='pickfiles']    #点击上传文件
+    sleep    1
+    文件上传-gc    【营销资料视频】.mp4    # 上传文档名字
+    sleep    2
+    等待    //input[@onclick="checkForm();"]
+    click element    //input[@onclick="checkForm();"]
+    unselect frame
+    sleep    5
+    page should contain    【营销资料视频】.mp4
+
+axx_招生资料下载
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    sleep    3
+    等待    //a[contains(text(),'招生资料')]
+    click element    //a[contains(text(),'招生资料')]    #点击招生资料下载
+    sleep    2
+    input text    //div[@class="sr-search-input el-input"]/input    【营销资料视频】.mp4    #输入文件名
+    sleep    1
+    click element    //div[@class="sr-search"]/button    #点击搜索文件
+    sleep    2
+    click element    //a[contains(text(),'下载')]
+    sleep    2
+    截图    招生资料下载
+
+glzx_内容管理_删除招生营销资料
+    等待    //a[@href="/resourceContent/marketingList"]
+    click link    //a[@href="/resourceContent/marketingList"]    #营销资料
+    等待    //a[contains(text(),'自动化测试营销资料')]
+    click element    //a[contains(text(),'自动化测试营销资料')]    #进入自动化测试课程资料
+    sleep    2
+    等待    //tbody/tr/td[*]/div/span/a[contains(text(),'删除')]
+    click element    //tbody/tr/td[*]/div/span/a[contains(text(),'删除')]    #点击删除
+    sleep    2
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]    #确定
+    sleep    5
+    ${result1}    get text    //div[3]/div[3]/div/table/tbody/tr/td
+    Should Be Equal As Strings    ${result1}    没有相关数据
+    click element    //div[@class="content layout"]/div[2]/a[contains(text(),"<<上一级")]    #点击上一级
+    等待    //a[contains(text(),'自动化测试营销资料')]
+    click element    //table/tbody/tr[1]/td[*]/div/span/a[contains(text(),'删除')]
+    sleep    2
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]
+    sleep    5
+    Page Should Not Contain    自动化测试营销资料
+
+axx_课程资料下载
+    sleep    2
+    页面存在就点击    //div[@class="ui-dialog-content"]/div/a
+    页面存在就点击    //div[@class="clos_ioc"]
+    sleep    3
+    等待    //a[contains(text(),'课程资料')]
+    click element    //a[contains(text(),'课程资料')]
+    sleep    1
+    等待    //iframe[@id="ifr"]
+    select frame    //iframe[@id="ifr"]
+    sleep    1
+    click element    //a[contains(text(),'自动化测试课程资料')]    #点击自动化测试
+    等待    //iframe[@id="resourceFrame"]
+    select frame    //iframe[@id="resourceFrame"]
+    sleep    2
+    等待    //ul[@class="zl_con"]/li[1]/div/p[1]/a
+    click element    //ul[@class="zl_con"]/li[1]/div/p[1]/a
+    sleep    2
+    click element    //ul[@class="zl_con"]/li[1]/p/a
+    unselect frame
+    unselect frame
+    sleep    2
+    截图    课程资料下载
+
+glzx_内容管理_上传课程资料
+    等待    //a[@href="/resourceContent/courseList"]
+    click link    //a[@href="/resourceContent/courseList"]    #课程资料
+    等待    //div[@class="content layout"]/div[2]/a
+    click element    //div[@class="content layout"]/div[2]/a    #新建文件夹
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    input text    //input[@name="realName"]    自动化测试课程资料    #文件夹名字
+    select from list    id=subjectId    初中数学    #选择课程
+    click element    //input[@onclick="submitForm();"]    #保存
+    unselect frame
+    sleep    3
+    page should contain    自动化测试课程资料
+    等待    //a[contains(text(),'自动化测试课程资料')]
+    click element    //a[contains(text(),'自动化测试课程资料')]
+    sleep    1
+    click element    //div[@class="content layout"]/div[2]/a[contains(text(),"新建文件夹")]
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    input text    //input[@name="realName"]    自动化测试1    #文件夹名字
+    sleep    1
+    click element    //input[@onclick="submitForm();"]    #保存
+    unselect frame
+    sleep    3
+    page should contain    自动化测试1
+    等待    //a[contains(text(),'自动化测试1')]
+    click element    //a[contains(text(),'自动化测试1')]
+    sleep    1
+    click element    //div[@class="content layout"]/div[2]/a[contains(text(),"上传文件")]    #上传文件
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    click element    //input[@id='pickfiles']    #点击上传文件
+    sleep    1
+    文件上传-gc    思高英语·中学学科介绍.mp4    # 上传文档名字
+    sleep    2
+    click element    //input[@onclick="checkForm();"]    #提交
+    unselect frame
+    sleep    10
+    page should contain    思高英语·中学学科介绍.mp4
+    等待    //a[contains(text(),'重命名')]
+    click element    //a[contains(text(),'重命名')]
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe
+    sleep    1
+    input text    //input[@name="realName"]    思高英语.mp4
+    sleep    1
+    click element    //input[@onclick="submitForm();"]    #保存
+    sleep    2
+    截图    课程资料上传完成
+
+glzx_内容管理_删除课程资料
+    等待    //a[@href="/resourceContent/courseList"]
+    click link    //a[@href="/resourceContent/courseList"]    #课程资料
+    等待    //a[contains(text(),'自动化测试课程资料')]
+    click element    //a[contains(text(),'自动化测试课程资料')]    #进入自动化测试课程资料
+    等待    //a[contains(text(),'自动化测试1')]
+    click element    //a[contains(text(),'自动化测试1')]    #进入自动化测试1
+    等待    //tbody/tr/td[7]/div/span/a[contains(text(),'删除')]
+    click element    //tbody/tr/td[7]/div/span/a[contains(text(),'删除')]    #点击删除
+    sleep    2
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]    #确定
+    sleep    5
+    ${result1}    get text    //div[3]/div[3]/div/table/tbody/tr/td
+    Should Be Equal As Strings    ${result1}    没有相关数据
+    click element    //div[@class="content layout"]/div[2]/a[contains(text()," <<上一级")]    #点击上一级
+    等待    //a[contains(text(),'自动化测试1')]
+    click element    //tbody/tr/td[7]/div/span/a[contains(text(),'删除')]    #点击删除
+    sleep    2
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]
+    sleep    5
+    ${result2}    get text    //div[3]/div[3]/div/table/tbody/tr/td
+    Should Be Equal As Strings    ${result2}    没有相关数据
+    click element    //div[@class="content layout"]/div[2]/a[contains(text()," <<上一级")]    #点击上一级
+    等待    //a[contains(text(),'自动化测试课程资料')]
+    click element    //table/tbody/tr[1]/td[5]/div/span/a[contains(text(),'删除')]
+    sleep    2
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]
+    sleep    5
+    Page Should Not Contain    自动化测试课程资料
+
+glzx_基础数据_新建课程
+    [Arguments]    ${courseName}
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]    #点击基础数据菜单
+    等待    //a[@href="/u/courses"]
+    click element    //a[@href="/u/courses"]    #课程
+    等待    //a[@class="comBtn fl"]
+    click link    //a[@class="comBtn fl"]    #点击新建课程
+    等待    //select[@id="subjectProductId"]/option[1]
+    Select From List    //select[@id="subjectProductId"]    小学数学
+    sleep    1
+    Select From List    //select[@name="jiaocai"]    无教材版本
+    sleep    1
+    Select From List    //select[@id="examAreaSelect"]    无考区
+    click element    //ul[@id="schemes"]/li[2]    #竞赛
+    click element    //ul[@id="time"]/li[1]    #2课时
+    click element    //ul[@id="type"]/li    #普通课程
+    input text    //input[@class="input rounded"]    ${courseName}
+    click element    //input[@id="submitButton"]    #点击提交
+    等待    //div[@class="jbox-button-panel"]/button[contains(text(),'返回课程列表')]
+    click button    //div[@class="jbox-button-panel"]/button[contains(text(),'返回课程列表')]    #返回课程列表
+    等待    //div[@class="bdTable"]/table/tbody/tr/td[2]
+    ${courseName_1}    get text    //div[@class="bdTable"]/table/tbody/tr/td[2]
+    Should Be Equal As Strings    ${courseName_1}    ${courseName}
+    截图    新建课程完成
+    click element    //div[@class="bdTable"]/table/tbody/tr[1]/td[11]/span[2]/a    #点击编辑
+    等待    //select[@id="subjectProductId"]/option[1]
+    Select From List    //select[@id="examAreaSelect"]    广州考区
+    click element    //input[@id="submitButton"]    #点击提交
+    等待    //div[@class="jbox-button-panel"]/button[contains(text(),'返回课程列表')]
+    click button    //div[@class="jbox-button-panel"]/button[contains(text(),'返回课程列表')]    #返回课程列表
+    等待    //div[@class="bdTable"]/table/tbody/tr[1]/td[7]
+    ${Test_area}    get text    //div[@class="bdTable"]/table/tbody/tr[1]/td[7]
+    Should Be Equal As Strings    ${Test_area}    广州考区
+    截图    课程考区修改完成
+    [Teardown]
+
+glzx_基础数据_删除课程
+    [Arguments]    ${courseName}
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]    #点击基础数据菜单
+    等待    //a[@href="/u/courses"]
+    click element    //a[@href="/u/courses"]    #课程
+    等待    //td[contains(text(),'ypAutotest')]/following-sibling::td[*]/span[*]/a[contains(text(),'删除')]
+    sleep    2
+    click element    //td[contains(text(),'ypAutotest')]/following-sibling::td[*]/span[*]/a[contains(text(),'删除')]
+    等待    //div[@id='jbox-state-state0']/div[2]/button[1]
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]    #点击确定
+    sleep    4
+    Page Should Not Contain    ypAutotest
+    截图    课程删除完成
+
+glzx_基础数据_添加班型
+    [Arguments]    ${courseName}    ${class_Num}
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]    #点击基础数据菜单
+    等待    //a[@href="/u/classTypes"]
+    click link    //a[@href="/u/classTypes"]    #点击班型
+    等待    //a[@class="comBtn fl"]
+    click link    //a[@class="comBtn fl"]    #点击添加
+    sleep    2
+    Select Frame    id=jbox-iframe    #进入iframe内嵌页面
+    Select Radio Button    type    0    #班型类型
+    Select Radio Button    content    1    #选择是否有内容
+    input text    //input[@name="code"]    ${class_Num}    #输入班型编码    #${code}zdhcsbx${threeNUM}
+    input text    //input[@name="name"]    ${courseName}    #输入班型名称
+    Select From List    //select[@id="subjectProductId"]    ${subject}
+    sleep    1
+    Select From List    //select[@id="grade"]    一年级
+    sleep    1
+    Select From List    //select[@id="courseId"]    ${courseName}
+    Select From List    //td[contains(text(),'学期：')]/following-sibling::td/select[3]    2
+    Select From List    //td[contains(text(),'学期：')]/following-sibling::td/select[4]    2
+    click element    //input[@id="submitButton"]    #点击保存
+    unselect frame
+    sleep    2
+
+glzx_基础数据_删除班型
+    [Arguments]    ${class_Num}
+    Connect To Database Using Custom Params    pymysql    ${mysql_institution}
+    Execute Sql String    DELETE from `institution`.class_type WHERE CODE='${class_Num}';
+    Disconnect From Database
+    Connect To Database Using Custom Params    pymysql    ${mysql_managesystemv1.0}
+    Execute Sql String    DELETE from `managesystemv1.0`.classtype WHERE CODE='${class_Num}';
+    Disconnect From Database
+
+glzx_新建课程-课程发布
+    [Arguments]    ${courseName}
+    等待    //a[@class="first basics"]
+    click link    //a[@class="first basics"]    #点击基础数据
+    等待    //a[@href="/u/courses"]
+    click link    //a[@href="/u/courses"]    #点击课程
+    sleep    3
+    click element    //td[contains(text(),'ypAutotest')]/following-sibling::td[1]/table/tbody/tr[1]/td[3]/a[contains(text(),'发布')]    #点击发布
+    等待    //div[@id='jbox-state-state0']/div[2]/button[1]
+    click element    //div[@id='jbox-state-state0']/div[2]/button[1]    #点击确定
+    sleep    5
+    等待    //td[contains(text(),'ypAutotest')]/following-sibling::td[1]/table/tbody/tr[1]/td[2]
+    ${yifabu}    get text    //td[contains(text(),'ypAutotest')]/following-sibling::td[1]/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${yifabu}    已发布
+    截图    课程发布成功
+
+glzx_内容管理-课节管理
+    等待    //a[@href="javaScript:location.reload()"]
+    click element    //a[@href="javaScript:location.reload()"]    #内容管理
+    sleep    2
+    等待    //a[@href="/content/lessonManage"]
+    click link    //a[@href="/content/lessonManage"]    #课节管理
+    sleep    1
+    click element    //div[3]/div[2]/div/dl[1]/dd/ul/li[2]/a    #选择小数学
+    sleep    2
+    click element    //div[@class="tabTitle"]/dl[2]/dd/ul/span[@id="grade1"]/li[*]/a[contains(text(),'一年级')]    #选择一年级
+    等待    //a[@onclick="setValue('status','1',this)"]
+    click element    //a[@onclick="setValue('status','1',this)"]
+    sleep    2
+    click element    //div[3]/div[3]/div[2]/div[1]/span/a[4]    #第二页
+    sleep    2
+    等待    //form[@id="manage"]/table/tbody/tr[*]/td[contains(text(),'ypAutotest')]/following-sibling::td[*]/a[contains(text(),'管理课节')]    #管理课节
+    click element    //form[@id="manage"]/table/tbody/tr[*]/td[contains(text(),'ypAutotest')]/following-sibling::td[*]/a[contains(text(),'管理课节')]
+    Select Window    new
+    sleep    2
+
+glzx_内容管理-添加课节讲次1
+    等待    //tr[@class="even"]/td[4]/span[2]/a
+    click element    //tr[@class="even"]/td[4]/span[2]/a    #课件上传
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    sleep    1
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #=添加课件
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    sleep    2
+    文件上传-gc    GSSX02S0104有趣的乘法1 (Web).zip
+    sleep    5
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]
+    sleep    2
+    等待    //tr[@class="even"]/td[5]/span[2]/a
+    click element    //tr[@class="even"]/td[5]/span[2]/a    #备课视频上传
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]    #添加视频
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    【小视频】1.mp4
+    sleep    2
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #上传
+    sleep    10
+    #
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    sleep    2
+    等待    //tr[@class="even"]/td[6]/span[a]/a
+    click element    //tr[@class="even"]/td[6]/span[a]/a    #上传课堂实录
+    sleep    2
+    Select Frame    id=jbox-iframe
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #添加视频
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    思高英语·中学学科介绍.mp4
+    sleep    2
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #点击上传
+    sleep    10
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    sleep    2
+    等待    //tr[@class="even"]/td[7]/span[a]/a
+    click element    //tr[@class="even"]/td[7]/span[a]/a    #上传教师讲义
+    sleep    2
+    Select Frame    id=jbox-iframe
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #添加讲义
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    1.pdf
+    sleep    3
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #点击上传
+    sleep    10
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    sleep    2
+    等待    //tbody/tr[2]/td[8]/div/span/a[contains(text(),'编辑')]
+    click element    //tbody/tr[2]/td[8]/div/span/a[contains(text(),'编辑')]    #编辑
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    input text    //form[@id='form1']/table/tbody/tr[2]/td[2]/input    自动化测试1    #课节名称
+    input text    //form[@id='form1']/table/tbody/tr[3]/td[2]/input    30    #时长
+    click element    //form[@id='form1']/div/input    #保存
+    sleep    3
+    等待    //form[@id='manage']/table/tbody/tr[2]/td[2]
+    ${course_name1}    get text    //form[@id='manage']/table/tbody/tr[2]/td[2]
+    Should Be Equal As Strings    ${course_name1}    自动化测试1
+    ${course_time1}    get text    //form[@id='manage']/table/tbody/tr[2]/td[3]
+    Should Be Equal As Strings    ${course_time1}    30.0
+
+glzx_内容管理-添加课节讲次2
+    sleep    2
+    等待    //tbody/tr[3]/td[4]/span[2]/a[contains(text(),'上传')]
+    click element    //tbody/tr[3]/td[4]/span[2]/a[contains(text(),'上传')]    #课件上传
+    sleep    2
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]    #=添加课件
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    sleep    2
+    文件上传-gc    实数-平方根.zip
+    sleep    5
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]
+    sleep    2
+    等待    //tbody/tr[3]/td[5]/span[2]/a[contains(text(),'上传')]
+    click element    //tbody/tr[3]/td[5]/span[2]/a[contains(text(),'上传')]    #备课视频上传
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #添加视频
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    GSSX02S0015列表推理备课视频.mp4
+    sleep    2
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #上传
+    sleep    10
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    Unselect Frame
+    sleep    2
+    等待    //tbody/tr[3]/td[6]/span[2]/a[contains(text(),'上传')]
+    click element    //tbody/tr[3]/td[6]/span[2]/a[contains(text(),'上传')]    #上传课堂实录
+    sleep    2
+    Select Frame    id=jbox-iframe
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #添加视频
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    11.mp4
+    sleep    2
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #点击上传
+    sleep    10
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    sleep    2
+    等待    //tbody/tr[3]/td[7]/span[2]/a[contains(text(),'上传')]
+    click element    //tbody/tr[3]/td[7]/span[2]/a[contains(text(),'上传')]    #上传教师讲义
+    sleep    2
+    Select Frame    id=jbox-iframe
+    等待    //input[@class="editVideoBtn edit"]
+    click element    //input[@class="editVideoBtn edit"]    #添加讲义
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@id='myFile']
+    click element    //input[@id='myFile']    #浏览
+    sleep    2
+    文件上传-gc    7.pdf
+    sleep    2
+    等待    //input[@value="上传"]
+    click element    //input[@value="上传"]    #点击上传
+    sleep    10
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]    #确定
+    sleep    2
+    等待    //tbody/tr[3]/td[8]/div/span/a[contains(text(),'编辑')]
+    click element    //tbody/tr[3]/td[8]/div/span/a[contains(text(),'编辑')]    #编辑
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    input text    //form[@id='form1']/table/tbody/tr[2]/td[2]/input    自动化测试2
+    input text    //form[@id='form1']/table/tbody/tr[3]/td[2]/input    45
+    click element    //form[@id='form1']/div/input    #保存
+    sleep    3
+    等待    //form[@id='manage']/table/tbody/tr[3]/td[2]
+    ${course_name2}    get text    //form[@id='manage']/table/tbody/tr[3]/td[2]
+    Should Be Equal As Strings    ${course_name2}    自动化测试2
+    ${course_time2}    get text    //form[@id='manage']/table/tbody/tr[3]/td[3]
+    Should Be Equal As Strings    ${course_time2}    45.0
+    截图    课节管理
+
+glzx_内容管理_作业/专属题
+    等待    //a[contains(text(),'作业/专属题')]
+    click element    //a[contains(text(),'作业/专属题')]
+    sleep    2
+    等待    //a[contains(text(),'小学数学')]
+    click element    //a[contains(text(),'小学数学')]    #点击小学数学
+    等待    //a[contains(text(),'秋季')]
+    click element    //a[contains(text(),'秋季')]    #点击秋季
+    等待    //select[@id='gradeId']
+    select from list    //select[@name="num"]    1    #讲次
+    select from list    //select[@id='gradeId']    一年级    #年级
+    sleep    2
+    select from list    //select[@id='id']    ${courseName}    #班型名称
+    click button    //button[@type="submit"]    #查询
+    等待    //div[@class="bdTable"]/table/tbody/tr/td[1]
+    ${class_num_0}    get text    //div[@class="bdTable"]/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${class_num_0}    ${class_Num}
+
+glzx_内容管理_作业
+    click element    //div[@class="bdTable"]/table/tbody/tr/td[6]/div/span/a    #编辑
+    sleep    5
+    等待    //div[@class="cons"]/ul/li[*]/a[contains(text(),'二年级')]
+    click element    //div[@class="cons"]/ul/li[*]/a[contains(text(),'二年级')]    #二年级
+    等待    //div[@class="cons"]/ul/li[1]/a/span/em
+    click element    //div[@class="cons"]/ul/li[1]/a/span/em    #有趣除法一
+    等待    //form[@id='knowledgeForm']/div/ul/li
+    click element    //form[@id='knowledgeForm']/div/div/a[contains(text(),'下一步')]
+    等待    //div[@id='addSpoken']
+    click element    //div[@id='addSpoken']    #请点击此处添加口述题
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe    #选择iframe页面
+    等待    //div[@class="open_common open_choseQuestion"]/div[2]/div[2]/div[@class="listBox"]/div
+    click element    //div[@class="open_common open_choseQuestion"]/div[2]/div[2]/div[@class="listBox"]/div    #选择题目
+    click element    //a[@id='submitBtn']    #点击确定
+    unselect frame
+    等待    //div[@id='spokenBox']/div/div[1]/span[2]
+    ${num}    get text    //div[@id='spokenBox']/div/div[1]/span[2]
+    Should Be Equal As Strings    ${num}    1
+    click element    //div[@id='spokenBox']/div/div[3]/div[2]/div[1]/ul/li[5]/a    #设置5分
+    click element    //div[@id='contrl']/a[2]/span    #点击保存
+    sleep    2
+    click element    //div[@id='contrl']/a[3]/span    #点击提交
+    sleep    2
+    等待    //div[3]/div[2]/div[2]/span
+    ${result}    get text    //div[3]/div[2]/div[2]/span
+    Should Be Equal As Strings    ${result}    已成功生成作业！
+    click element    //div[@class="content"]/div[2]/div[3]/a[contains(text(),'返回列表')]
+    等待    //div[@class="bdTable"]/table/tbody/tr/td[6]/div/span/a[4]
+    ${yulan1}    get text    //div[@class="bdTable"]/table/tbody/tr/td[6]/div/span/a[4]
+    Should Be Equal As Strings    ${yulan1}    预览
+
+glzx_内容管理_专属题
+    click element    //div[@class="bdTable"]/table/tbody/tr/td[7]/span/a    #编辑
+    sleep    5
+    等待    //div[@class="cons"]/ul/li[*]/a[contains(text(),'二年级')]
+    click element    //div[@class="cons"]/ul/li[*]/a[contains(text(),'二年级')]    #二年级
+    等待    //div[@class="cons"]/ul/li[1]/a/span/em
+    click element    //div[@class="cons"]/ul/li[1]/a/span/em    #有趣除法一
+    等待    //form[@id='knowledgeForm']/div/ul/li
+    click element    //form[@id='knowledgeForm']/div/div/a[contains(text(),'下一步')]
+    等待    //div[@class="addObject"]
+    click element    //div[@class="addObject"]    #请点击此处添加口述题
+    等待    id=jbox-iframe
+    select frame    id=jbox-iframe    #选择iframe页面
+    等待    //div[@class="open_common open_choseQuestion"]/div[2]/div[2]/div[@class="listBox"]/div[1]
+    click element    //div[@class="open_common open_choseQuestion"]/div[2]/div[2]/div[@class="listBox"]/div[1]    #选择题目
+    click element    //a[@id='submitBtn']    #点击确定
+    unselect frame
+    等待    //div[@id='objectiveList']/div/div[1]/span[2]
+    ${num2}    get text    //div[@id='objectiveList']/div/div[1]/span[2]
+    Should Be Equal As Strings    ${num2}    1
+    click element    //div[@class="paperSubmit cf"]/a[2]/span    #点击保存
+    sleep    2
+    click element    //div[@class="paperSubmit cf"]/a[3]/span    #点击提交
+    sleep    2
+    等待    //div[3]/div[2]/div[2]/span
+    ${result2}    get text    //div[3]/div[2]/div[2]/span
+    Should Be Equal As Strings    ${result2}    已成功生成专属题！
+    click element    //div[@class="content layout"]/div[2]/div[3]/a[contains(text(),'返回列表')]
+    sleep    1
+    等待    //a[contains(text(),'小学数学')]
+    click element    //a[contains(text(),'小学数学')]    #点击小学数学
+    sleep    1
+    等待    //a[contains(text(),'秋季')]
+    click element    //a[contains(text(),'秋季')]    #点击秋季
+    sleep    1
+    等待    //select[@id='gradeId']
+    select from list    //select[@name="num"]    1    #讲次
+    select from list    //select[@id='gradeId']    新概念    #年级
+    sleep    2
+    select from list    //select[@id='id']    ${courseName}    #班型名称
+    click button    //button[@type="submit"]    #查询
+    等待    //div[@class="bdTable"]/table/tbody/tr/td[7]/span/a[contains(text(),'预览')]
+    ${yulan2}    get text    //div[@class="bdTable"]/table/tbody/tr/td[7]/span/a[contains(text(),'预览')]
+    Should Be Equal As Strings    ${yulan2}    预览
+
+glzx_DIY_知识点搜索
+    select window    new    #选择新页面
+    ${title_0}    gettext    //div[@id='root']/div/div[1]/div[1]/span
+    Should Be Equal As Strings    ${title_0}    爱学习DIY系统
+    sleep    2
+    input text    //input[@class="ant-input"]    自动化测试
+    click element    //i[@class="anticon anticon-search ant-input-search-icon"]
+    sleep    3
+    Page Should Contain    自动化测试知识点
+
+glzx_DIY_知识点新增题模
+    select window    new    #选择新页面
+    ${title_0}    gettext    //div[@id='root']/div/div[1]/div[1]/span
+    Should Be Equal As Strings    ${title_0}    爱学习DIY系统
+    等待    //span[contains(text(),'自动化测试')]
+    click element    //span[contains(text(),'自动化测试')]    #选择文件夹
+    click element    //span[contains(text(),'自动化测试知识点1')]    #点击知识点
+    等待    //div[@class="knowledge-rightcontent-wrap"]/button
+    click element    //div[@class="knowledge-rightcontent-wrap"]/button    #点击新建题模
+    sleep    2
+    ${knowledgeName}    gettext    //a[@id='knowledgeId']
+    Should Be Equal As Strings    ${knowledgeName}    自动化测试知识点1
+    input text    //input[@id='description']    自动化测试新建题模
+    click element    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    Page Should Contain    自动化测试新建题模
+    截图    新建题模
+
+glzx_DIY_知识点编辑题模
+    sleep    2
+    click element    //div[@class="knowledge-rightcontent-wrap"]/div[4]/table/tbody/tr/td[4]/a[1]    #编辑
+    Clear Element Text    //input[@id='description']    #清空文本框
+    sleep    1
+    input text    //input[@id='description']    自动化测试编辑题模
+    click element    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    Page Should Contain    自动化测试编辑题模
+    截图    编辑题模
+
+glzx_DIY_知识点删除题模
+    #glzx_DIY_知识点删除题模（无题）
+    sleep    2
+    click element    //div[@class="knowledge-rightcontent-wrap"]/div[4]/table/tbody/tr/td[4]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-confirm-btns"]/button[2]    #确定
+    sleep    1
+    Page Should notContain    自动化测试编辑题模
+    截图    删除题模
+    #glzx_DIY_知识点删除题模（有题）
+    sleep    2
+    click element    //span[contains(text(),'自动化测试知识点2')]
+    sleep    2
+    ${tiliang}    gettext    //div[@class="knowledge-rightcontent-wrap"]/div[4]/table/tbody/tr/td[3]
+    Should Be Equal As Strings    ${tiliang}    题量： 6
+    click element    //div[@class="knowledge-rightcontent-wrap"]/div[4]/table/tbody/tr/td[4]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-confirm-btns"]/button[2]    #确定
+    sleep    1
+    Page Should Contain    非法操作:删除题模，请确保节点下没有依赖!
+
+glzx_DIY_搜索题目
+    input text    //div[@class="resource-rightcontent-wrap"]/div[1]/div[*]/div/span/input    自动化自动化_勿删
+    sleep    2
+    click element    //div[@id='root']/div/div[3]/div[1]/div/div[2]/div/div[1]/div[4]/div/span/span/i    #搜索
+    sleep    2
+    Page Should Contain    {自动化自动化_勿删}
+    click element    //div[contains(text(),'题目内容')]
+    sleep    1
+    click element    //li[contains(text(),'题号')]    #题号
+    sleep    0.5
+    input text    //div[@class="resource-rightcontent-wrap"]/div[1]/div[*]/div/span/input    179108
+    click element    //div[@id='root']/div/div[3]/div[1]/div/div[2]/div/div[1]/div[4]/div/span/span/i    #搜索
+    sleep    2
+    Page Should Contain    {自动化自动化_勿删}
+    sleep    1
+    click element    //ul[@class="ant-tree-show-line ant-tree"]/li[*]/span[2]/span[contains(text(),'自动化测试')]    #点击自动化测试文件夹
+    sleep    1
+    click element    //span[contains(text(),'自动化测试知识点2')]
+    sleep    1
+    click element    //div[@class="resource-rightcontent-wrap"]/div[2]/div[3]/div[2]/div/div/div    #题模选择
+    sleep    1
+    click element    //li[contains(text(),'自动化测试知识点2题模')]
+    sleep    2
+    Page Should Contain    {自动化自动化_勿删}
+
+glzx_DIY_删除题目
+    sleep    2
+    Click Element    //ul[@class="ant-pagination "]/li[9]/a    #点击最后一页
+    sleep    10
+    等待    //div[@class="ant-spin-container"]/div/div[*]/div/div[2]/a[contains(text(),'删除')]
+    Click Element    //div[@class="ant-spin-container"]/div/div[*]/div/div[2]/a[contains(text(),'删除')]    #点击删除
+    sleep    2
+    click button    //div[@class="ant-modal-content"]/div/div/div[2]/button[2]    #确定
+    sleep    0.5
+    Page Should Contain    删除成功
+    截图    题目删除
+
+glzx_DIY_上传题目讲解视频
+    input text    //div[@class="resource-rightcontent-wrap"]/div[1]/div[*]/div/span/input    {自动化自动化_勿删}已知点
+    sleep    2
+    click element    //div[@id='root']/div/div[3]/div[1]/div/div[2]/div/div[1]/div[3]/div/span/span/i    #搜索
+    sleep    5
+    Page Should Contain    {自动化自动化_勿删}
+    click element    //p/span[contains(text(),'{自动化自动化_勿删}')]    #点击题目
+    sleep    1
+    等待    //div[@class="ant-tabs-nav ant-tabs-nav-animated"]/div[contains(text(),'讲解视频')]
+    click element    //div[@class="ant-tabs-nav ant-tabs-nav-animated"]/div[contains(text(),'讲解视频')]    #点击讲解视频
+    sleep    1
+    等待    //div[@class="ant-upload ant-upload-select ant-upload-select-text"]/span/div/button
+    click button    //div[@class="ant-upload ant-upload-select ant-upload-select-text"]/span/div/button    #点击上传/变更
+    文件上传-gc    自动化测试讲解视频.mp4
+    sleep    10
+    截图    题目讲解视频上传
+
+glzx_DIY_课件上传
+    [Arguments]    ${autotest}    ${confirm}
+    DIY_二级菜单    课件
+    click element    //button[@class="ant-btn ant-btn-primary"]    #添加课件
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    3
+    等待    //span[contains(text(),'自动化测试知识点2')]
+    click element    //span[contains(text(),'自动化测试知识点2')]    #点击知识点
+    sleep    1
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    1
+    click button    //button[@id='upload-b']    #上传
+    sleep    2
+    文件上传-gc    自动化测试课件.zip
+    sleep    10
+    等待    //input[@value="自动化测试课件"]
+    截图    DIY课件上传
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    资源库选择知识点题模
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    ${kejian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${kejian_name}    自动化测试课件
+
+glzx_DIY_上传相同课件报异常
+    [Arguments]    ${autotest}    ${knowledge-node}    ${confirm}
+    sleep    2
+    click element    //button[@class="ant-btn ant-btn-primary"]    #添加课件
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    3
+    等待    ${knowledge-node}
+    click element    ${knowledge-node}    #点击知识点
+    sleep    2
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    1
+    click button    //button[@id='upload-b']    #上传
+    sleep    2
+    文件上传-gc    自动化测试课件.zip
+    sleep    10
+    等待    //input[@value="自动化测试课件"]
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    sleep    0.5
+    Page Should Contain    重复提交了知识点下已存在的碎片类型
+    click button    //div[@class="ant-modal-content"]/div[3]/button[1]    #取消
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    ${kejian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${kejian_name}    自动化测试课件
+
+glzx_DIY_课件编辑
+    sleep    1
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[2]    #点击编辑
+    sleep    1
+    等待    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化课件')]
+    click element    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化课件')]
+    sleep    2
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    5
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[1]
+    ${suipian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[1]
+    Should Be Equal As Strings    ${suipian_name}    自动化课件
+
+glzx_DIY_课件更改知识点
+    [Arguments]    ${autotest}    ${knowledge-node}    ${confirm}
+    sleep    1
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[2]    #点击编辑
+    sleep    2
+    click element    //div[@id='referenceIds']/div/span/i    #点击错号
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    3
+    等待    ${knowledge-node}
+    click element    ${knowledge-node}    #点击知识点
+    sleep    2
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    2
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    sleep    3
+    等待    //span[contains(text(),'自动化测试知识点1')]
+    click element    //span[contains(text(),'自动化测试知识点1')]    #点击知识点
+    sleep    2
+    等待    //div[@class="ant-table-body"]/table/tbody/tr/td[3]
+    ${knowledge}    gettext    //div[@class="ant-table-body"]/table/tbody/tr/td[3]
+    Should Be Equal As Strings    ${knowledge}    自动化测试知识点1
+
+glzx_DIY_课件删除
+    sleep    3
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[3]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[3]    #点击删除
+    sleep    1
+    click button    //div[@class="ant-popover-inner-content"]/div[2]/button[2]
+    sleep    5
+    Page Should Not Contain    自动化测试课件
+
+glzx_DIY_课件预览
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[1]    #点击预览
+    sleep    1
+    select window    new
+    截图    课件预览
+
+glzx_DIY_说课视频上传
+    [Arguments]    ${autotest}    ${confirm}
+    DIY_二级菜单    说课视频
+    click element    //button[@class="ant-btn ant-btn-primary"]    #添加说课视频
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    1
+    等待    //span[contains(text(),'自动化测试知识点2')]
+    click element    //span[contains(text(),'自动化测试知识点2')]    #点击知识点
+    sleep    1
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    1
+    click button    //div[@id='pieceUri']/div/div[1]/span/div/span/div/button    #上传
+    sleep    2
+    文件上传-gc    自动化测试说课视频.mp4
+    sleep    10
+    等待    //input[@value="自动化测试说课视频"]
+    截图    DIY说课视频上传
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    资源库选择知识点题模
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[2]
+    ${kejian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[2]
+    Should Be Equal As Strings    ${kejian_name}    自动化测试说课视频
+
+glzx_DIY_说课视频预览
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[7]/a[1]    #点击预览
+    sleep    1
+    截图    说课视频预览
+    click element    //div[@class="ant-modal-content"]/div[2]/button    #关闭预览
+
+glzx_DIY_说课视频编辑
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[2]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[2]    #点击编辑
+    sleep    2
+    等待    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化说课视频')]
+    click element    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化说课视频')]
+    sleep    2
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    5
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    ${suipian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${suipian_name}    自动化说课视频
+
+glzx_DIY_说课视频删除
+    sleep    3
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[3]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[3]    #点击删除
+    sleep    1
+    click button    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    5
+    Page Should Not Contain    自动化测试说课视频
+
+glzx_DIY_2013视频上传
+    [Arguments]    ${autotest}    ${confirm}
+    DIY_二级菜单    2013视频
+    click element    //button[@class="ant-btn ant-btn-primary"]    #添加2013视频
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    1
+    等待    //span[contains(text(),'自动化测试知识点2')]
+    click element    //span[contains(text(),'自动化测试知识点2')]    #点击知识点
+    sleep    1
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    1
+    click button    //div[@id='pieceUri']/div/div[1]/span/div/span/div/button    #上传
+    sleep    2
+    文件上传-gc    自动化测试2013视频.mp4
+    sleep    10
+    等待    //input[@value="自动化测试2013视频"]
+    截图    DIY2013视频上传
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    资源库选择知识点题模
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[2]
+    ${kejian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[2]
+    Should Be Equal As Strings    ${kejian_name}    自动化测试2013视频
+
+glzx_DIY_2013视频预览
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/div[1]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/div[1]/a[1]    #点击预览
+    sleep    3
+    截图    2013视频预览
+    click element    //div[8]/div/div[2]/div/div[1]/button    #关闭预览
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/div[2]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/div[2]/a[1]    #查看二维码
+    截图    2013视频二维码
+
+glzx_DIY_2013视频编辑
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[1]    #点击编辑
+    sleep    2
+    等待    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化2013视频')]
+    click element    //div[@id='pieceTypeId']/div/div[2]/a[contains(text(),'自动化2013视频')]
+    sleep    2
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    5
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    ${suipian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${suipian_name}    自动化2013视频
+
+glzx_DIY_2013视频删除
+    sleep    3
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[2]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[7]/a[2]    #点击删除
+    sleep    1
+    click button    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    5
+    Page Should Not Contain    自动化测试说课视频
+
+glzx_DIY_说课综述上传
+    [Arguments]    ${autotest}    ${confirm}
+    DIY_二级菜单    说课综述
+    click element    //button[@class="ant-btn ant-btn-primary"]    #添加说课综述
+    sleep    1
+    click element    //div[@id='referenceIds']/div/a    #选择知识点
+    sleep    3
+    等待    ${autotest}
+    click element    ${autotest}    #点击自动化测试
+    sleep    1
+    等待    //span[contains(text(),'自动化测试知识点2')]
+    click element    //span[contains(text(),'自动化测试知识点2')]    #点击知识点
+    sleep    1
+    等待    ${confirm}
+    click button    ${confirm}    #确定
+    sleep    1
+    click button    //div[@id='pieceUri']/div/div[1]/span/div/span/div/button    #上传
+    sleep    2
+    文件上传-gc    自动化测试说课综述.mp4
+    sleep    10
+    等待    //input[@value="自动化测试说课综述"]
+    截图    DIY说课综述上传
+    click button    //div[@class="ant-modal-content"]/div[3]/button[2]    #确定
+    资源库选择知识点题模
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    ${kejian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${kejian_name}    自动化测试说课综述
+
+glzx_DIY_说课综述预览
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/div
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/div    #点击预览
+    sleep    3
+    截图    说课综述预览
+    click element    //div[8]/div/div[2]/div/div[1]/div[2]/button    #关闭预览
+
+glzx_DIY_说课综述编辑
+    sleep    1
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/a[1]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/a[1]    #点击编辑
+    sleep    2
+    等待    //input[@id='pieceName']
+    input text    //input[@id='pieceName']    自动化测试编辑
+    sleep    2
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    5
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    ${suipian_name}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${suipian_name}    自动化测试编辑
+
+glzx_DIY_说课综述删除
+    sleep    3
+    等待    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/a[2]
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr/td[5]/a[2]    #点击删除
+    sleep    1
+    click button    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    5
+    Page Should Not Contain    自动化测试编辑
+
+glzx_DIY_资源库教材设置
+    DIY_二级菜单    基础设置
+    click button    //div[@id='crud-content-main']/div/div/div[1]/div[1]/div/button    #添加
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置教材
+    sleep    1
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${JC}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${JC}    自动化测试设置教材
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[5]/a[1]    #编辑
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置教材编辑
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${JC}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${JC}    自动化测试设置教材编辑
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[5]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    1
+    Page Should Not Contain    自动化测试设置教材编辑
+
+glzx_DIY_资源库课件设置
+    click element    //li[contains(text(),'课件设置')]
+    click button    //div[@id='crud-content-main']/div/div/div[1]/div[1]/div/button
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置课件
+    sleep    1
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${KJ}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${KJ}    自动化测试设置课件
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[1]    #编辑
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置课件编辑
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${JC}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${JC}    自动化测试设置课件编辑
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    1
+    Page Should Not Contain    自动化测试设置课件编辑
+
+glzx_DIY_资源库说课视频设置
+    click element    //li[contains(text(),'说课视频设置')]
+    click button    //div[@id='crud-content-main']/div/div/div[1]/div[1]/div/button
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置说课视频
+    sleep    1
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${KJ}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${KJ}    自动化测试设置说课视频
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[1]    #编辑
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置说课视频编辑
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${JC}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${JC}    自动化测试设置说课视频编辑
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    1
+    Page Should Not Contain    自动化测试设置说课视频编辑
+
+glzx_DIY_资源库2013视频设置
+    click element    //li[contains(text(),'2013视频设置')]
+    click button    //div[@id='crud-content-main']/div/div/div[1]/div[1]/div/button
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置2013视频
+    sleep    1
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${KJ}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${KJ}    自动化测试设置2013视频
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[1]    #编辑
+    sleep    2
+    等待    //input[@id='pieceTypeName']
+    input text    //input[@id='pieceTypeName']    自动化测试设置2013视频编辑
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    ${JC}    get text    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[2]
+    Should Be Equal As Strings    ${JC}    自动化测试设置2013视频编辑
+    click element    //div[@class="ant-table-content"]/div/table/tbody/tr[1]/td[4]/a[2]    #删除
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    1
+    Page Should Not Contain    自动化测试设置2013视频编辑
+
+glzx_DIY_课程新增
+    click button    //div[@id='crud-content-main']/div/div[2]/div/div[1]/div[1]/div/button    #点击新增课程
+    sleep    1
+    input text    //input[@class="ant-input"]    自动化测试新增课程    #输入课程名称
+    click element    //div[@id='gradeTerms']/div[1]/div[1]/label/span[1]/input    #选择年级
+    sleep    1
+    click button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    5
+    等待    //div[@id='root']/div/div[3]/div[1]/div[3]/div[1]/div[2]/div[2]/p[1]
+    ${scheduleName}    get text    //div[@id='root']/div/div[3]/div[1]/div[3]/div[1]/div[2]/div[2]/p[1]
+    Should Contain    ${scheduleName}    自动化测试新增课程
+
+glzx_DIY_课程修改
+    Click Element    //li[contains(text(),'标准版')]    #点击标准版
+    sleep    2
+    input text    //input[@id='name']    自动化测试
+    Click Element    //input[@id='name']/following-sibling::span/i    #搜索
+    sleep    2
+    click element    //table/tbody/tr/td[7]/a[text()='修改']    #点击修改
+    sleep    2
+    input text    //form[@class="ant-form ant-form-horizontal"]/div/div[1]/div[2]/div/input[@class="ant-input ant-input-lg"]    自动化测试修改课程
+    sleep    1
+    Click Button    //div[@class="ant-modal-footer"]/button[2]    #点击确定
+    sleep    2
+    page Should Contain    自动化测试修改课程
+    sleep    1
+
+glzx_DIY_课程删除
+    Click Element    //li[contains(text(),'标准版')]    #点击标准版
+    sleep    2
+    input text    //input[@id='name']    自动化测试
+    Click Element    //input[@id='name']/following-sibling::span/i    #搜索
+    sleep    2
+    等待    //table/tbody/tr[1]/td[7]/a[contains(text(),'删除')]
+    Click Element    //table/tbody/tr[1]/td[7]/a[contains(text(),'删除')]    #删除
+    sleep    2
+    等待    //div[@class="ant-popover-inner-content"]/div[2]/button[2]
+    Click Button    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #是
+    sleep    2
+    等待    //div[@class="ant-table-content"]/div[2]/span
+    ${result}    get text    //div[@class="ant-table-content"]/div[2]/span
+    Should Be Equal As Strings    ${result}    暂无数据
+
+glzx_DIY_添加讲次知识点
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div[@class="season-style"]/div/div/span    #新讲次
+    sleep    0.5
+    inputtext    //div[@class="ant-row-flex season-wrap"]/div[1]/div[@class="season-style"]/div/div/input    自动化测试讲次
+    sleep    1
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div[@class="season-style"]/div/div/span[2]    #确定
+    sleep    0.5
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/a/span[2]    #点击新添的加讲次
+    sleep    0.5
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/ul/div/div    #新模块
+    sleep    0.5
+    inputtext    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/ul/div/div/input    自动化测试讲次模块
+    sleep    1
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/ul/div/div/span[2]    #确定
+    sleep    1
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/ul/li/a    #点击新添加的模块
+    sleep    0.5
+    Click Element    //div[@class="ant-row-flex season-wrap"]/div[1]/div/div/ul/li/ul/li/div/li/div    #点击知识点
+    sleep    0.5
+    Click Element    //div[@id="root"]/following-sibling::div[4]/div/div[2]/div/div[1]/div[2]/div[1]/div/ul/li[*]/span[contains(text(),'自动化测试')]    #选择文件夹
+    sleep    0.5
+    Click Element    //span[contains(text(),'自动化测试知识点2')]    #选择知识点
+    sleep    0.5
+    Click Button    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    Click Element    //div[@id='root']/div/div[3]/div[1]/div[5]/button    #下一步
+    sleep    3
+
+glzx_DIY_添加题模和题目
+    click element    //div[@class="ant-row-flex"]/div[1]/div[2]/ul/li/ul/li[1]/ul/li/a/span[2]    #点击讲次
+    sleep    1
+    click element    //div[@class="ant-row"]/div[3]    #添加题模
+    sleep    1
+    click element    //div[@class="ant-modal-body"]/div/div[2]/span    #选择题模
+    sleep    1
+    click element    //div[@class="ant-modal-footer"]/button[2]    #确定
+    sleep    1
+    click element    //span[contains(text(),'例题')]
+    sleep    1
+    click element    //div[1]/div[@class="topic-content"]/div[1]/div[@class="topic-detail-content"]/div/div[@class="false"]/div/span/div/p    #点击题目
+    sleep    1
+    click element    //button/span[contains(text(),'完成试题')]
+    sleep    1
+    click element    //span[contains(text(),'练习题')]
+    sleep    1
+    click element    //div[2]/div[@class="topic-content"]/div[1]/div[@class="topic-detail-content"]/div/div[@class="false"]/div/span/div/p    #点击题目
+    sleep    1
+    click element    //button/span[contains(text(),'完成试题')]
+    截图    添加题模和题目
+    sleep    2
+    focus    //div[@id='root']/div/div[3]/div[1]/div[4]/button[2]
+    Click Button    //div[@id='root']/div/div[3]/div[1]/div[4]/button[2]    #下一步
+    sleep    3
+
+glzx_DIY_课程讲义和课件合成
+    Click Element    //span[contains(text(),'教师版讲义')]    #点击教师版讲义
+    sleep    1
+    Click Element    //div[@id='root']/div/div[3]/div[1]/div[3]/div/div/div[2]/div[2]/div/div/div/div[1]/div/div/div/ul/li/ul/li[1]/ul/li/a/span[2]    #选择课程
+    sleep    0.5
+    截图    教师版讲义
+    Click Element    //span[contains(text(),'课件')]    #点击课件
+    sleep    1
+    Click Element    //div[@id='root']/div/div[3]/div[1]/div[3]/div/div/div[2]/div[3]/div/div/div[1]/div[2]/ul/li/ul/li[1]/ul/li/a/span[2]    #选择课程
+    sleep    0.5
+    Click Element    //button/span[contains(text(),'合成本讲课件')]    #点击合成课件
+    sleep    10
+    等待    id=iframe
+    select frame    id=iframe
+    sleep    0.5
+    等待    //span[@id='playNext']
+    Click Element    //span[@id='playNext']    #点击》
+    sleep    0.5
+    Click Element    //span[@id='playNext']
+    sleep    0.5
+    clickbutton    //button[@id='toc-button']    #点击目录
+    sleep    0.5
+    Click Element    //li[contains(text(),'例 1')]    #点击例1
+    sleep    2
+    Click Element    //div[@id='slide-box']/div[@class="slide vc v6 current-active-slide"]/div[3]/div    #答案
+    sleep    1
+    截图    课件
+    unselect frame
+    Click Element    //span[contains(text(),'说课视频')]    #点击说课视频
+    sleep    1
+    Click Element    //div[@id='root']/div/div[3]/div[1]/div[3]/div/div/div[2]/div[5]/div/div/div/div[1]/div/ul/li/ul/li[1]/ul/li/a/span[2]    #选择课程
+    sleep    8
+    截图    说课视频
+
+glzx_DIY_资源库资源删除还原
+    DIY_二级菜单    课件
+    资源库选择知识点题模
+    glzx_DIY_课件删除
+    DIY_二级菜单    说课视频
+    资源库选择知识点题模
+    glzx_DIY_说课视频删除
+    DIY_二级菜单    2013视频
+    资源库选择知识点题模
+    glzx_DIY_2013视频删除
+    DIY_二级菜单    说课综述
+    资源库选择知识点题模
+    glzx_DIY_说课综述删除
+
+glzx_DIY_课程模板新增
+    click element    //li[contains(text(),'默认模版管理')]
+    等待    //button/span[contains(text(),'新增模板')]
+    click element    //button/span[contains(text(),'新增模板')]    #点击新增按钮
+    sleep    3
+    等待    //form[@class="ant-form ant-form-horizontal"]/div/div[2]/div/input[@id='name']
+    input text    //form[@class="ant-form ant-form-horizontal"]/div/div[2]/div/input[@id='name']    自动化测试新增模板
+    sleep    0.5
+    click element    //form/div[2]/div[2]/div/ul/li[contains(text(),'第三方')]    #选择体系
+    click element    //div[@id='gradeTerms']/div[1]/div[1]/label/span[1]/input    #年级及学期
+    sleep    1
+    click element    //div[3]/div/div[2]/div/div[1]/div[3]/button[2]    #确定
+    sleep    3
+    Page Should Contain    自动化测试新增模板
+
+glzx_DIY_课程模板编辑
+    click element    //table/tbody/tr[*]/td[contains(text(),'自动化测试新增模板')]/following-sibling::td[3]/a[3]    #编辑
+    sleep    3
+    等待    //form[@class="ant-form ant-form-horizontal"]/div/div[2]/div/input[@id='name']
+    input text    //form[@class="ant-form ant-form-horizontal"]/div/div[2]/div/input[@id='name']    自动化测试编辑模板
+    sleep    1
+    click element    //div[3]/div/div[2]/div/div[1]/div[3]/button[2]    #确定
+    sleep    1
+    Page Should Contain    新增了对应学科体系下已存在的年级学期！
+    click element    //form/div[2]/div[2]/div/ul/li[contains(text(),'第三方')]    #选择体系
+    sleep    1
+    click element    //div[3]/div/div[2]/div/div[1]/div[3]/button[2]    #确定
+    sleep    3
+    Page Should Contain    自动化测试编辑模板
+
+glzx_DIY_课程模板删除
+    click element    //table/tbody/tr[*]/td[contains(text(),'自动化测试编辑模板')]/following-sibling::td[3]/a[4]    #删除
+    sleep    0.5
+    click element    //div[6]/div/div/div/div[2]/div/div/div[2]/button[2]    #删除二次确认
+    sleep    0.5
+    Page Should Contain    删除成功
+
+axx_校长首页_公告
+    click element    //div[@class="notice-entry-wrap"]/ul/li[2]/span[1]    #点击公告标题
+    sleep    3
+    Select Window    new
+    sleep    5
+    等待    //h2
+    ${result}    gettext    //h2
+    Should Contain    ${result}    自动化测试编辑公告
+    Should Contain    ${result}    重要
+    截图    公告详情页
+
+glzx_内容管理_公告新增
+    等待    //a[contains(text(),'公告')]
+    click element    //a[contains(text(),'公告')]    #公告菜单
+    等待    //button/span[contains(text(),'新增')]
+    sleep    2
+    Comment    click element    //button/span[contains(text(),'新增')]    #点击新增按钮
+    click element    //div[@id='crud-content-main']/div/div[2]/div[1]/button
+    sleep    2
+    等待    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input
+    input text    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input    自动化测试新增公告    #输入标题
+    sleep    1
+    click element    //form[@class="ant-form ant-form-horizontal"]/div[3]/div/div/div[2]/div/div/label[1]/span[1]/input    #选择重要
+    click element    //form/div[8]/div/div/div[2]/div/div/div/div/div[contains(text(),'请选择板块')]
+    sleep    0.5
+    click element    //div[8]/div/div/div/ul/li[contains(text(),'校长首页右侧栏公告')]    #板块
+    sleep    0.5
+    click element    //div[@title="多图上传"]/div[1]    #点击图片上传
+    sleep    2
+    select frame    //iframe[@id="edui147_iframe"]
+    sleep    0.5
+    click element    //div[@id='tabhead']/span[contains(text(),'本地上传')]    #选择本地上传
+    sleep    0.5
+    click element    //div[@id="filePickerReady"]/div[2]/label    #点击选择图片
+    sleep    2
+    文件上传-gc    png图片.png
+    click element    //div[contains(text(),'开始上传')]    #点击开始上传
+    sleep    5
+    unselect frame
+    click element    //div[contains(text(),'确认')]    #点击确认
+    sleep    2
+    click element    //form/div[12]/div/div/div[2]/div/div/label[2]/span[1]/input    #下架状态
+    sleep    0.5
+    click element    //button[@class="ant-btn ant-btn-primary ant-btn-lg"]    #点击保存
+    sleep    3
+    Page Should Contain    自动化测试新增公告
+    ${result}    gettext    //td[contains(text(),'自动化测试新增公告')]/following-sibling::td[3]
+    Should Be Equal As Strings    ${result}    是
+    截图    自动化测试新增公告
+
+glzx_内容管理_公告修改
+    click element    //td[contains(text(),'自动化测试新增公告')]/following-sibling::td[8]/a[contains(text(),'编辑')]    #编辑
+    sleep    0.5
+    等待    //form/div[2]/div/div/div[2]/div/div/input
+    Web Scroll Down    //form/div[2]/div/div/div[2]/div/div/input
+    input text    //form/div[2]/div/div/div[2]/div/div/input    自动化测试编辑公告
+    sleep    0.5
+    Web Scroll Down    //button[@class="ant-btn ant-btn-primary ant-btn-lg"]
+    click element    //button[@class="ant-btn ant-btn-primary ant-btn-lg"]    #点击保存
+    sleep    3
+    click element    //td[contains(text(),'自动化测试编辑公告')]/following-sibling::td[8]/span/span[contains(text(),'显示')]    #点击显示
+    sleep    1
+    ${result}    gettext    //td[contains(text(),'自动化测试编辑公告')]/following-sibling::td[1]
+    Should Be Equal As Strings    ${result}    显示
+
+glzx_内容管理_公告删除
+    等待    //a[contains(text(),'公告')]
+    click element    //a[contains(text(),'公告')]    #公告菜单
+    等待    //td[contains(text(),'自动化测试编辑公告')]/following-sibling::td[4]
+    sleep    2
+    ${result}    get text    //td[contains(text(),'自动化测试编辑公告')]/following-sibling::td[4]
+    Should Be Equal As Strings    ${result}    1    #浏览量
+    sleep    2
+    click element    //td[contains(text(),'自动化测试编辑公告')]/following-sibling::td[8]/a[2]    #点击删除
+    sleep    2
+    click element    //button[@class="ant-btn ant-btn-primary ant-btn-sm"]    #二次确认删除
+    sleep    2
+    Page Should Not Contain    自动化测试编辑公告
+
+glzx_内容管理_科目新增
+    等待    //a[contains(text(),'科目介绍')]
+    click element    //a[contains(text(),'科目介绍')]    #科目介绍菜单
+    等待    //div[@class="ant-col-5"]/div/button[@class="ant-btn ant-btn-primary"]
+    click element    //div[@class="ant-col-5"]/div/button[@class="ant-btn ant-btn-primary"]    #点击科目新建
+    sleep    1
+    input text    //input[@id='brandName']    自动化测试科目
+    sleep    0.5
+    click element    //form/div[2]/div[2]/div/div/span/div[1]/span/button    #学科介绍页导航上传
+    sleep    0.5
+    文件上传-gc    25x25图片.png
+    sleep    3
+    click element    //form/div[3]/div[2]/div/div/span/div[1]/span/button
+    sleep    0.5
+    文件上传-gc    校长首页入口.png
+    sleep    3
+    click element    //div[@class="ant-modal-content"]/div[@class="ant-modal-footer"]/button[2]    #点击确定
+    sleep    2
+    Page Should Contain    自动化测试科目
+
+glzx_内容管理_学部新增
+    click element    //span[contains(text(),'自动化测试科目')]
+    sleep    1
+    click element    //div[@id='crud-content-main']/div/div/div[1]/button    #点击学部新增
+    sleep    2
+    等待    //form/div[3]/div/div/div[2]/div/div/input
+    input text    //form/div[3]/div/div/div[2]/div/div/input    自测学部    #输入学部名称
+    input text    //form/div[4]/div/div/div[2]/div/div/input    自测学部一句话介绍    #输入一句话介绍
+    click element    //form/div[6]/div/div/div[2]/div/div/div/div/div    #点击关联学科
+    sleep    0.5
+    click element    //ul/li[contains(text(),'高斯数学·小学')]    #选择关联的学科
+    sleep    0.5
+    click element    //label[contains(text(),'关联学科')]    #收起拉下列表
+    sleep    0.5
+    click element    //div[@class="ant-radio-group ant-radio-group-default"]/label[2]/span[1]/input    #状态隐藏
+    sleep    3
+    click element    //form/div[8]/div/div/div[2]/div/div/span/div[1]/span/button    #点击上传
+    sleep    1
+    文件上传-gc    【小视频】1.mp4
+    sleep    7
+    click element    //div[7]/div/div[2]/div/div[1]/div[3]/button[2]    #点击保存
+    sleep    1
+
+glzx_内容管理_学部板块新增/编辑/删除
+    click element    //div[@class="ant-modal-body"]/div/div/div/div[1]/button    #点击新建板块
+    sleep    1
+    等待    //form/div[2]/div/div/div[2]/div/div/input
+    input text    //form/div[2]/div/div/div[2]/div/div/input    自动化测板块
+    sleep    1
+    click element    //div[12]/div/div[2]/div/div[1]/div[3]/button[2]    #点击保存
+    sleep    1
+    Page Should Contain    新增数据成功
+    click element    //div[@class="ant-modal-body"]/div/div/div/div[1]/button    #点击新建板块
+    sleep    1
+    Page Should Contain    最多创建8个板块！！
+    sleep    1
+    click element    //table/tbody/tr[8]/td[2]/a[contains(text(),'上移')]    #点击上移
+    sleep    2
+    ${result}    gettext    //table/tbody/tr[7]/td[1]
+    Should Be Equal As Strings    ${result}    自动化测板块
+    sleep    1
+    click element    //table/tbody/tr[1]/td[2]/a[contains(text(),'下移')]    #点击下移
+    sleep    2
+    ${result}    gettext    //table/tbody/tr[2]/td[1]
+    Should Be Equal As Strings    ${result}    体系介绍
+    sleep    1
+    click element    //table/tbody/tr[1]/td[2]/a[contains(text(),'删除')]    #点击删除
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #二次确认删除
+    sleep    1
+    click element    //div[11]/div/div[2]/div/div[1]/div[3]/button[2]    #点击确定
+    sleep    3
+
+glzx_内容管理_学部编辑
+    click element    //td[contains(text(),'自测学部')]/following-sibling::td[5]/a[contains(text(),'编辑')]    #点击编辑
+    sleep    2
+    inputtext    //form/div[3]/div/div/div[2]/div/div/input    编辑学部
+    sleep    1
+    click element    //div[7]/div/div[2]/div/div[1]/div[3]/button[2]    #点击保存
+    sleep    1
+    Page Should Contain    编辑学部
+    click element    //td[contains(text(),'编辑学部')]/following-sibling::td[5]/span/span[contains(text(),'显示')]    #点击操作栏中的显示
+    sleep    2
+    ${result}    gettext    //td[contains(text(),'编辑学部')]/following-sibling::td[1]
+    Should Be Equal As Strings    ${result}    显示
+
+axx_校长首页_学科介绍
+    mouse over    //ul[@class="discipline-wrap"]/li[contains(@style,'校长首页入口.png')]    #悬浮学科上
+    sleep    0.5
+    click element    //ul[@class="discipline-wrap"]/li[contains(@style,'校长首页入口.png')]/div/a[contains(text(),'编辑学部')]    #点击编辑学部
+    sleep    1
+    Select Window    new
+    sleep    5
+    Page Should Contain    自动化测试科目·编辑学部： 自测学部一句话介绍
+    Page Should Contain    自动化测板块
+    截图    学科介绍
+
+glzx_内容管理_科目删除
+    等待    //a[contains(text(),'科目介绍')]
+    click element    //a[contains(text(),'科目介绍')]    #科目介绍菜单
+    sleep    2
+    Open Context Menu    //span[contains(text(),'自动化测试科目')]    #右键自动化测试科目
+    sleep    0.5
+    click element    //div[@class="gaosi-rightmenu"]/a[2]    #删除
+    sleep    2
+    Comment    等待    //button[2]/span[contains(text(),'确 定')]
+    click element    //div[*]/div/div[2]/div/div[1]/div/div/div[2]/button[2]    #确定
+    sleep    3
+    Page Should not Contain    自动化测试科目
+
+glzx_内容管理_帮助文章分类新增
+    等待    //a[contains(text(),'帮助')]
+    clickelement    //a[contains(text(),'帮助')]    #点击帮助
+    等待    //div[@class="knowledge-left-wrap user-select-none"]/button
+    Open Context Menu    //div[@class="knowledge-left-wrap user-select-none"]/button    #右键
+    sleep    0.5
+    clickelement    //a[contains(text(),'新建一级分类')]    #点击新建一级分类
+    sleep    1
+    等待    //div[@class="ant-row-flex"]/div[2]/input
+    input text    //div[@class="ant-row-flex"]/div[2]/input    自动化测试帮助文章一级分类    #一级分类名称
+    sleep    1
+    clickelement    //div[@class="ant-modal-content"]/div[3]/button[2]    #点击确定
+    sleep    2
+    Page Should Contain    自动化测试帮助文章一级分类
+    Open Context Menu    //span[contains(text(),'自动化测试帮助文章一级分类')]
+    sleep    0.5
+    clickelement    //a[contains(text(),'新建二级分类')]    #点击新建二级分类
+    sleep    1
+    等待    //div[@class="ant-row-flex"]/div[2]/input
+    input text    //div[@class="ant-row-flex"]/div[2]/input    自动化测试帮助文章二级分类    #二级分类名称
+    sleep    0.5
+    clickelement    //span[@class="upload-list-inline"]/div[1]/span/button    #点击上传
+    sleep    2
+    文件上传-gc    帮助中心图片.jpg
+    sleep    4
+    clickelement    //div[@class="ant-modal-content"]/div[3]/button[2]    #点击确定
+    sleep    2
+
+glzx_内容管理_帮助文章新增
+    click element    //div[@id='crud-content-main']/div/div/div[1]/button    #点击新增
+    sleep    2
+    等待    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input
+    input text    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input    自动化测试新增帮助文章    #标题
+    click element    //form/div[9]/div/div/div[2]/div/span/span/span    #点击分类
+    sleep    1
+    click element    //ul/li[*]//span[@title='自动化测试帮助文章一级分类']/preceding-sibling::span[2]    #选择一级分类
+    sleep    1
+    click element    //ul/li[*]/ul/li/span[@title='自动化测试帮助文章二级分类']/preceding-sibling::span[1]    #点击选择二级分类
+    sleep    1
+    click element    //label[contains(text(),'分类')]    #收起分类菜单
+    sleep    1
+    click element    //form/div[10]/div/div/div[2]/div/div/div/div/div    #点击FAQ
+    sleep    1
+    click element    //ul/li[contains(text(),'校长首页FAQ')]
+    sleep    1
+    click element    //label[contains(text(),'FAQ')]    #收起FAQ菜单
+    sleep    1
+    click element    //div[@title="多图上传"]/div[1]
+    sleep    2
+    select frame    //iframe[@id="edui147_iframe"]
+    sleep    0.5
+    click element    //div[@id='tabhead']/span[contains(text(),'本地上传')]    #选择本地上传
+    sleep    0.5
+    click element    //div[@id="filePickerReady"]/div[2]/label    #点击选择图片
+    sleep    2
+    文件上传-gc    帮助中心图片.jpg
+    click element    //div[contains(text(),'开始上传')]    #点击开始上传
+    sleep    3
+    unselect frame
+    click element    //div[contains(text(),'确认')]    #点击确认
+    sleep    5
+    execute javascript    document.documentElement.scrollTop=1000
+    click element    //form[@class="ant-form ant-form-horizontal"]/div[*]/div/div/div[2]/div/div/span/div[1]/span/button    #点击上传
+    sleep    2
+    文件上传-gc    【小视频】1.mp4
+    sleep    10
+    click element    //div[7]/div/div[2]/div/div[1]/div[3]/button[2]    #点击保存
+    sleep    2
+    click element    //span[contains(text(),'自动化测试帮助文章一级分类')]    #点击一级分类
+    sleep    0.5
+    click element    //span[contains(text(),'自动化测试帮助文章二级分类')]    #点击二级分类
+    sleep    2
+    ${result}    get text    //div[@class="ant-table-body"]/table/tbody/tr/td[1]
+    Should Be Equal As Strings    ${result}    自动化测试新增帮助文章
+
+glzx_内容管理_帮助文章修改
+    click element    //td[contains(text(),'自动化测试新增帮助文章')]/following-sibling::td[7]/a[1]    #点击编辑
+    sleep    2
+    execute javascript    document.documentElement.scrollTop=0
+    sleep    1
+    等待    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input
+    input text    //form[@class="ant-form ant-form-horizontal"]/div[2]/div/div/div[2]/div/div/input    自动化测试编辑帮助文章    #输入标题
+    sleep    0.5
+    click element    //div[7]/div/div[2]/div/div[1]/div[3]/button[2]    #点击保存
+    sleep    2
+    click element    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[7]/a[3]    #点击更改排名
+    sleep    1
+    input text    //div[@class="ant-modal-content"]/div[2]/input    1    #输入排名
+    click element    //div[14]/div/div[2]/div/div[1]/div[3]/button[2]    #点击确定
+    sleep    2
+    ${result}    get text    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[6]
+    Should Be Equal As Strings    ${result}    1
+
+axx_校长首页_帮助中心
+    Comment    execute javascript    document.documentElement.scrollTop=1000
+    sleep    1
+    Comment    focus    //div[@class="president-content-right"]/ul/li[@title="自动化测试编辑帮助文章"]
+    click element    //div[@id='container']/div/div[2]/div[2]/ul/li[@title="自动化测试编辑帮助文章"]    #点击自动化测试编辑帮助文章
+    sleep    2
+    Select Window    new
+    sleep    5
+    ${result}    get text    //h2
+    Should Contain    ${result}    自动化测试编辑帮助文章
+    click element    //div[@id='app']/div[2]/div/div[2]/div[1]/div/div[3]/div/button[1]    #点击解决了
+    sleep    0.5
+    Page Should Contain    感谢反馈
+    sleep    2
+    click element    //div[@id='app']/div[2]/div/div[2]/div[1]/div/div[3]/div/button[1]    #点击解决了
+    sleep    0.5
+    Page Should Contain    您已经投过票啦
+
+glzx_内容管理_帮助文章删除
+    等待    //a[contains(text(),'帮助')]
+    clickelement    //a[contains(text(),'帮助')]    #点击帮助
+    sleep    2
+    click element    //span[contains(text(),'自动化测试帮助文章一级分类')]    #点击一级分类
+    sleep    0.5
+    click element    //span[contains(text(),'自动化测试帮助文章二级分类')]    #点击二级分类
+    sleep    2
+    ${result}    get text    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[2]
+    Should Be Equal As Strings    ${result}    1    #浏览量
+    ${result2}    get text    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[3]
+    Should Be Equal As Strings    ${result2}    1/0    #有用/没用
+    click element    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[7]/span/a    #点击下架
+    sleep    2
+    ${result3}    get text    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[1]
+    Should Be Equal As Strings    ${result3}    下架
+    Open Context Menu    //span[contains(text(),'自动化测试帮助文章一级分类')]
+    sleep    0.5
+    click element    //div[4]/a[text()='删除']    #点击删除分类
+    sleep    1.5
+    Page Should Contain    该分组下有帮助文章，如需删除请先转移该组下帮助文章
+    sleep    1
+    click element    //td[contains(text(),'自动化测试编辑帮助文章')]/following-sibling::td[7]/a[2]    #点击删除文章
+    sleep    1
+    click element    //div[@class="ant-popover-inner-content"]/div[2]/button[2]    #删除二次确认
+    sleep    2
+    Page Should Not Contain    自动化测试编辑帮助文章
+    Open Context Menu    //span[contains(text(),'自动化测试帮助文章一级分类')]
+    sleep    0.5
+    click element    //div[4]/a[text()='删除']    #点击删除分类
+    sleep    1
+    Page Should Contain    删除成功
+    sleep    2
+    Page Should Not Contain    自动化测试帮助文章一级分类

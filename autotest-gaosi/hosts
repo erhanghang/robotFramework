@@ -1,0 +1,121 @@
+# 方案一
+# 什么也没有绑定
+#
+# 在这儿输入你需要绑定的 hosts
+##start--------------------------------onlinetest环境--------------------------------
+##基础
+#10.24.160.29 nexus.aixuexi.com
+#10.24.160.29 maven.aixuexi.com
+##10.24.160.29 gerrit.dev.aixuexi.com
+#10.45.138.45 mysql.aixuexi.com
+#10.45.138.45 redis.cluster.aixuexi.com
+#10.45.138.45 redis.aixuexi.com
+#10.45.138.45 mongo.aixuexi.com
+#10.45.138.45 rabbit.aixuexi.com
+#10.45.138.45 zookeeper.aixuexi.com
+#10.45.138.45 ehcache.aixuexi.com
+#10.45.138.45 mongo.aixuexi.com
+#10.45.138.45 memcached.aixuexi.com
+#10.45.41.25 t.sms-email.aixuexi.com
+#
+#--------------------------------qinhuangdao web 16G g60.205.151.117 s10.26.50.227--------------------------------
+60.205.151.117 www.aixuexi.com 
+60.205.151.117 i.aixuexi.com
+60.205.151.117 beike.aixuexi.com 
+60.205.151.117 ke.aixuexi.com
+60.205.151.117 xuexiao.aixuexi.com
+#60.205.151.117 video.aixuexi.com
+60.205.151.117 kejian.aixuexi.com
+60.205.151.117 guanli.aixuexi.com
+#101.201.112.96 guanli.aixuexi.com
+60.205.151.117 dubboadmin.aixuexi.com 
+60.205.151.117 dubboadmin1.aixuexi.com 
+60.205.151.117 service.aixuexi.com 
+60.205.151.117 bk.aixuexi.com
+60.205.151.117 bx.aixuexi.com
+60.205.151.117 oneyuan.aixuexi.com
+60.205.151.117 api.aixuexi.com 
+60.205.151.117 dubbo-monitor.aixuexi.com
+60.205.151.117 datiqi.aixuexi.com
+60.205.151.117 ghostrider.aixuexi.com
+60.205.151.117 wage.aixuexi.com
+60.205.151.117 teacher.aixuexi.com
+60.205.151.117 c.aixuexi.com
+
+
+#60.205.151.117 tiku.aixuexi.com
+
+#60.205.151.117 postman.aixuexi.com 废弃
+#60.205.151.117 ws.aixuexi.com 废弃
+#静态文件
+#60.205.151.117 custom.aixuexi.com 
+60.205.151.117 newshouke.aixuexi.com 
+60.205.151.117 oneyuan.aixuexi.com
+60.205.151.117 px.aixuexi.com
+60.205.151.117 newsx.aixuexi.com
+60.205.151.117 train.aixuexi.com
+60.205.151.117 newxx.aixuexi.com
+60.205.151.117 static.aixuexi.com
+60.205.151.117 appdownload.aixuexi.com
+#60.205.151.117 resource.aixuexi.com
+60.205.151.117 terminator.aixuexi.com
+60.205.151.117 diy-courseware.aixuexi.com
+
+
+
+#--------------------------------qinhai 16G g101.201.141.69  s10.45.138.45--------------------------------
+10.45.138.45 dubbomonitor.aixuexi.com
+101.201.141.69 image.aixuexi.com
+101.201.141.69 rabbit.aixuexi.com
+
+
+#--------------------------------nanning service 16G s10.45.139.140--------------------------------
+
+#--------------------------------taiyuan 8G g123.57.9.87 s10.171.56.175--------------------------------
+
+#--------------------------------jinzhong service 16G g101.201.112.96  s10.25.197.68--------------------------------
+101.201.112.96 ws.aixuexi.com
+101.201.112.96 xz.aixuexi.com
+
+#--------------------------------kunming   16G  g101.201.78.226    s10.45.41.25--------------------------------
+#nodejs: bk-web3000,r-web3001,train-web3002,school-web3003,charge-web3004
+#101.201.78.226 bk.aixuexi.com 老备课
+101.201.78.226 r.aixuexi.com
+101.201.78.226 px-old.aixuexi.com
+101.201.78.226 school.aixuexi.com
+101.201.78.226 xufei.aixuexi.com
+101.201.78.226 cdiy.aixuexi.com
+101.201.78.226 diy.aixuexi.com
+
+#php:测评前台 orgCenter:xuexia0 
+101.201.78.226 front.aixuexi.com
+101.201.78.226 gaosibei.aixuexi.com
+101.201.78.226 xuexia0.aixuexi.com
+#101.201.78.226 guide.aixuexi.com
+101.201.78.226 showslow.aixuexi.com
+101.201.78.226 tiku.aixuexi.com
+101.201.78.226 mall.aixuexi.com#商城
+101.201.78.226 jira.dev.aixuexi.com
+101.201.78.226 faq.dev.aixuexi.com
+
+101.201.78.226 image.km.aixuexi.com
+101.201.78.226 diy.aixuexi.com
+101.201.78.226 help.aixuexi.com
+101.201.78.226 news.aixuexi.com
+
+#tomcat:zootropolis-web8011,inception-web8009,surrogates-web8010 tongji-web8006 godfather-web8008
+101.201.78.226 tongji.aixuexi.com
+101.201.78.226 godfather.aixuexi.com
+101.201.78.226 caiwu.aixuexi.com
+101.201.78.226 ceping.aixuexi.com
+
+#lepus
+#http://101.201.78.226:8081/-
+
+
+101.200.88.81 testkj.aixuexi.com
+
+
+
+
+#end--------------------------------onlinetest环境--------------------------------

@@ -1,0 +1,594 @@
+*** Settings ***
+Library           robotpil.py
+Library           Selenium2Library
+
+*** Variables ***
+${firefox_profile}    C:\\Users\\pgq\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\b33ps0qu.default
+
+*** Keywords ***
+打开首页-ff
+    [Arguments]    ${qt_url}
+    Open Browser    ${qt_url}    firefox    ff_profile_dir=${firefox_profile}
+
+文件上传-ff
+    win wait    文件上传
+    win active    文件上传
+    ${tmp}    Get Home DIR    123.jpg
+    Control Set Text    文件上传    \    Edit1    ${tmp}
+    sleep    1
+    Control Click    文件上传    \    Button1
+
+打开首页-ie
+    [Arguments]    ${qt_url}
+    ${local_ie_driver}    Set Variable    C:\\Python27\\IEDriverServer.exe
+    Set Environment Variable    no_proxy    127.0.0.1
+    Set Environment Variable    webdriver.ie.driver    ${local_ie_driver}
+    Open Browser    ${qt_url}    ie
+
+文件上传-ie
+    ${tmp}    Get Home DIR    123.jpg
+    Win Wait    选择要加载的文件
+    Win Wait Active    选择要加载的文件
+    Control Set Text    选择要加载的文件    \    Edit1    c:\\123.jpg
+    sleep    1
+    Control Click    选择要加载的文件    \    Button1
+    sleep    2
+    Comment    Send    {ENTER}
+    Comment    con    1
+    Comment    Control Set Text    选择要加载的文件    \    Edit1    ${tmp}
+    Comment    sleep    1
+    Comment    Control Click    选择要加载的文件    \    Button1
+
+打开首页-gc
+    [Arguments]    ${qt_url}
+    taskKill    chromedriver.exe
+    taskKill    chrome.exe
+    sleep    1
+    ${local_gc_driver}    Set Variable    C:\\Python27\\chromedriver.exe
+    Set Environment Variable    no_proxy    127.0.0.1
+    Set Environment Variable    webdriver.chrome.driver    ${local_gc_driver}
+    Open Browser    ${qt_url}    gc
+
+文件上传-gc
+    [Arguments]    ${filename}
+    win wait    打开
+    win active    打开
+    ${tmp}    Get Home DIR    ${filename}
+    Control Set Text    打开    \    Edit1    ${tmp}
+    sleep    1
+    Control Click    打开    \    Button1
+
+登录
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc
+    ...    ELSE    打开首页-ie
+    Maximize Browser Window
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    input text    id=txtUserName    ${username}
+    \    sleep    1
+    \    input text    id=txtUserPwd    ${userpwd}
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=txtVilCode    ${tmp}
+    \    Click Button    id=btnLogin
+    \    sleep    2
+    \    ${res}    Run Keyword and return status    Page Should not Contain    用户登录
+    \    Exit For Loop If    ${res}
+    等待    //a[@href="/zh-cn/account/my_center/"]/p
+    ${tmp}    get text    //a[@href="/zh-cn/account/my_center/"]/p
+    ${res}    Set Variable if    ${tmp}==${username}    "login success!"    "login fail!!!"
+    log    ${res}
+
+用户登录op
+    [Arguments]    ${urlop}
+    ${url}    Set Variable    ${urlop}
+    ${id}=    Open Browser    ${url}    firefox    ff_profile_dir=${firefox_profile}
+    Maximize Browser Window
+    input text    id=id_username    ${op_username}
+    input text    id=id_password    ${op_password}
+    click button    id=btnLogin
+    [Return]    ${id}
+
+登录-计算器
+    Maximize Browser Window
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    input text    id=txtUserName    ${username}
+    \    sleep    1
+    \    input text    id=txtUserPwd    ${userpwd}
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=txtVilCode    ${tmp}
+    \    Click Button    id=btnLogin
+    \    sleep    2
+    \    ${res}    Run Keyword and return status    Page Should not Contain    用户登录
+    \    Exit For Loop If    ${res}
+    等待    //a[@href="/zh-cn/account/my_center/"]/p
+    ${tmp}    get text    //a[@href="/zh-cn/account/my_center/"]/p
+    ${res}    Set Variable if    ${tmp}==${username}    "login success!"    "login fail!!!"
+    log    ${res}
+
+等待
+    [Arguments]    ${xpath}
+    Wait Until Page Contains Element    ${xpath}    12    error="Can`t Find This Element !"
+
+查看任务
+    [Arguments]    ${taskname}
+    等待    //*[@id="dh_task"]
+    Click element    //*[@id="dh_task"]
+    等待    //*[@id="showId"]
+    Click element    //*[@id="showId"]
+    : FOR    ${i}    IN RANGE    1000
+    \    Reload Page
+    \    sleep    5
+    \    等待    //DIV[@class="RenWuZhongXing"][1]/span
+    \    ${tmp1}    Get Text    //DIV[@class="RenWuZhongXing"][1]/span
+    \    ${tmp11}    Evaluate    "${tmp1}"['${tmp1}'.index('(')+1:"${tmp1}".index(")")]
+    \    Exit For Loop If    ${tmp11}==0
+    ${tmp}    get text    //*[@id="showId"]
+    run keyword if    '${tmp}'=='显示已完成任务'    Click element    //*[@id="showId"]
+    sleep    1
+    等待    //DIV[@class="RenWuZhongXing"][3]/following-sibling::div[1]/div[1]
+    ${tmp2}    get text    //DIV[@class="RenWuZhongXing"][3]/following-sibling::div[1]/div[1]
+    ${tmp3}    get text    //DIV[@class="RenWuZhongXing"][3]/following-sibling::div[1]/div[2]/span[2]/span[2]
+    ${tmp4}    Set Variable    执行完成，完成时间
+    ${res}    Set Variable If    "${tmp4}" in "${tmp3}" and "${taskname}"=="${tmp2}"    true    false
+    Should Be Equal As Strings    ${res}    true
+
+确认
+    等待    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+    sleep    1
+    click button    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+
+提示
+    sleep    1
+    等待    //div[@id="AlertMessage"]/following-sibling::div[1]/div/button[1]
+    click button    //div[@id="AlertMessage"]/following-sibling::div[1]/div/button[1]
+
+云主机搜索
+    [Arguments]    ${vm}
+    等待    //input[@name="keywords"]
+    input text    //input[@name="keywords"]    ${vm}
+    click button    //input[@onclick="search();"]
+    sleep    3
+
+删除验证码
+    等待    //input[@id="id_send_check_code"]
+    Click element    //input[@id="id_send_check_code"]
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    ${id}    ${code}    获取验证码    ${username}
+    ${id0}    Evaluate    ${id}-1
+    Switch Browser    ${id0}
+    等待    //center[@id="id_check_input"]/input[1]
+    ${tmp}    Evaluate    "${code}"[0:1]
+    input text    //center[@id="id_check_input"]/input[1]    ${tmp}
+    ${tmp}    Evaluate    "${code}"[1:2]
+    input text    //center[@id="id_check_input"]/input[2]    ${tmp}
+    ${tmp}    Evaluate    "${code}"[2:3]
+    input text    //center[@id="id_check_input"]/input[3]    ${tmp}
+    ${tmp}    Evaluate    "${code}"[3:4]
+    input text    //center[@id="id_check_input"]/input[4]    ${tmp}
+    ${tmp}    Evaluate    "${code}"[4:5]
+    input text    //center[@id="id_check_input"]/input[5]    ${tmp}
+    ${tmp}    Evaluate    "${code}"[5:6]
+    input text    //center[@id="id_check_input"]/input[6]    ${tmp}
+    click element    //*[@id="id_buy_sub"]
+
+获取验证码
+    [Arguments]    ${mobile}
+    ${id}    用户登录op    ${gic_op}
+    等待    //span[contains(text(),"系统管理")]
+    click element    //span[contains(text(),"系统管理")]
+    等待    //a[@href="/mobile_verify_code/"]
+    click element    //a[@href="/mobile_verify_code/"]
+    等待    name=mobile
+    input text    name=mobile    ${mobile}
+    click button    //button[@id="btnSearch"]
+    ${yzm}    Get Text    //table[@class="table no-border hover"]/tbody/tr[1]/td[3]
+    close browser
+    sleep    5
+    [Return]    ${id}    ${yzm}
+
+增加公网
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan"]
+    等待    //span[contains(text(),'${vdc}')]/parent::div/parent::div/following-sibling::a
+    Click element    //span[contains(text(),'${vdc}')]/parent::div/parent::div/following-sibling::a
+    等待    //div[@onclick="sub_update()"]
+    Click element    //div[@onclick="sub_update()"]
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    增加IP网段
+
+关闭
+    sleep    1
+    等待    //div[@id="Dia_SaveMsgOk"]/div/div/div[3]/button
+    click button    //div[@id="Dia_SaveMsgOk"]/div/div/div[3]/button
+
+网络测试
+    [Arguments]    ${ip}    ${password}    ${ip2}
+    open connection    ${ip}
+    ${output}    login    root    ${password}
+    sleep    2
+    should contain    ${output}    Last login:
+    sleep    1
+    ${cmd1}    Evaluate    "ping -c 4 " + "${ip2}"
+    Start Command    ${cmd1}
+    ${stdout}=    Read Command Output
+    Should Contain    ${stdout}    64 bytes from
+    Close Connection
+    sleep    1
+
+写入云主机
+    click element    //a[@onclick="config_ip_to_cloud()"]
+    确认
+    提示
+    查看任务    IP写入云主机
+
+提示成功
+    [Arguments]    ${notice}
+    sleep    12
+    ${msg}    confirm Action
+    ${res}    Set Variable If    "${notice}" in "${msg}"    true    false
+    Should Be Equal As Strings    ${res}    true
+    Choose Ok On Next Confirmation
+
+配置界面
+    [Arguments]    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+
+模板测试p
+    [Arguments]    ${vm}    ${tab}    ${os}    ${item}    ${gpnip}    ${sip}
+    登录    ${username}    ${userpwd}
+    购买主机p    ${vm}    ${tab}    ${os}    ${item}
+    Comment    设置gpnp    ${gpnip}    ${vm}
+    Comment    修改配置p    ${vm}
+    Comment    测试网络通断p    ${vm}
+    Comment    开关机p    ${vm}
+    Comment    重启p    ${vm}
+    Comment    修改私网p    ${vm}    ${sip}
+    Comment    测试网络通断p    ${vm}
+    Close Browser
+
+设置gpnp
+    [Arguments]    ${gpnip}    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    等待    //input[@obj_type="gic"]
+    input text    //input[@obj_type="gic"]    ${gpnip}
+    click element    //input[@obj_type="gic"]/following-sibling::p[2]/a
+    确认
+    提示
+    等待    //a[@onclick="config_ip_to_cloud()"]/span
+    Click element    //a[@onclick="config_ip_to_cloud()"]/span
+    提示框
+    提示框
+    查看任务    更改云主机
+
+测试网络通断p
+    [Arguments]    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    等待    //input[@obj_type="pub"]
+    ${tmp1}    Get Element Attribute    //input[@obj_type="pub"]@value
+    ${tmp2}    Get Element Attribute    //input[@obj_type="lan"]@value
+    ${tmp3}    Get Element Attribute    //input[@obj_type="gic"]@value
+    ${s_ip}    Get Ini Value    globe    ip
+    网络测试    ${s_ip}    ${password}    ${tmp1}
+    网络测试    ${s_ip}    ${password}    ${tmp2}
+    网络测试    ${s_ip}    ${password}    ${tmp3}
+    网络测试    ${tmp1}    ${password}    ${s_ip}
+
+修改配置p
+    [Arguments]    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo2"]
+    等待    //p[@cpu="2" and @name="cpu"]
+    click element    //p[@cpu="2" and @name="cpu"]
+    等待    //p[@ram="2" and @name="ram"]
+    click element    //p[@ram="2" and @name="ram"]
+    click element    //p[@id="add_disk"]
+    等待    //*[@id="slider-range-min1"]
+    Drag And Drop By Offset    //*[@id="slider-range-min1"]    -140    0
+    sleep    2
+    click element    //div[@onclick="sub_vm()"]
+    提示框
+    提示成功    云主机更新任务生成成功,请等待任务处理，谢谢！
+    查看任务    更改云主机
+
+开关机p
+    [Arguments]    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][2]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][2]
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    关闭
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][1]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][1]
+    sleep    1
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    运行
+
+重启p
+    [Arguments]    ${vm}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][1]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][1]
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    运行
+
+修改私网p
+    [Arguments]    ${vm}    ${sip}
+    配置界面    ${vm}
+    input text    //input[@obj_type="lan"]    ${sip}
+    click element    //input[@obj_type="lan"]/following-sibling::p[2]/a
+    提示框
+    提示框
+    写入云主机
+    查看任务    更改云主机
+    配置界面    ${vm}
+    ${tmp}    Get Element Attribute    //input[@obj_type="lan"]@value
+    Should Be Equal As Strings    ${tmp}    ${sip}
+
+购买主机p
+    [Arguments]    ${vm}    ${tab}    ${os}    ${item}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    Select From List    //*[@id="id_app_vm_sel"]    ${vdc}
+    Click button    //input[@onclick="vm_create_open()"]
+    ${tmp1}    Evaluate    "${vm}"[0:len("${vm}")-3]
+    ${tmp2}    Evaluate    "${vm}"[-3:]
+    input text    //*[@id="id_vm_name"]    ${tmp1}
+    input text    //*[@id="id_vm_number"]    ${tmp2}
+    input text    id=id_vm_password    ${password}
+    input text    id=id_vm_password_confirm    ${password}
+    等待    //*[@os_type="${tab}"]
+    click element    //*[@os_type="${tab}"]
+    Select From List By Index    //*[@id="${os}"]    ${item}
+    select checkbox    name=ckb_pub
+    select checkbox    name=ckb_pri
+    等待    //*[@id="ok"]
+    click element    //*[@id="ok"]
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    创建云主机
+
+删除云主机p
+    [Arguments]    ${vm}
+    登录    ${username}    ${userpwd}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][3]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo"][3]
+    删除验证码    删除云主机
+
+文件上传
+    Run Keyword If    "${browser}"=="ff"    文件上传-ff
+    ...    ELSE IF    "${browser}"=="gc"    文件上传-gc
+    ...    ELSE    文件上传-ie
+
+提示框
+    sleep    1
+    等待    //div[@class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-cds ui-dialog-buttons-cds ui-draggable ui-resizable" and contains(@style,'display: block')]/div[3]/div/button[1]
+    click button    //div[@class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-dialog-cds ui-dialog-buttons-cds ui-draggable ui-resizable" and contains(@style,'display: block')]/div[3]/div/button[1]
+
+删除提示框
+    ${res}    Run Keyword and return status    Element Should Be Visible    //div[@class="querengoumai"]
+    Run Keyword If    ${res}    删除验证码
+
+a备课-登录
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc
+    ...    ELSE    打开首页-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    15201569320
+    input text    id=password    123456
+    click element    id=submit
+    click element    id=beike
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click element    //dd[@class="gradeList"]/a[2]
+    click element    //dd[@class="periodList"]/a[2]
+    click element    //div[@class="classType english"]/ul/li[2]
+    click element    //div[@class="left animated"]/ul/li[1]
+    Comment    click element    //div[@class="xx_sec_home"]/ul/li[2]
+    Select Window    new
+    Comment    等待    //li[@class="currentLesson"]
+    Comment    click element    //li[@class="currentLesson"]
+    Comment    Log To Console    "hhhhhh"
+    click link    //a[@class="jiangyi "]
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    click link    //a[@class="beike "]
+    click link    //a[@class="shilu "]
+
+a学校
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc
+    ...    ELSE    打开首页-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    15201569320
+    input text    id=password    123456
+    click element    id=submit
+    click element    id=xuexiao
+    等待    //div[@class="clos_ioc"]
+    click element    //div[@class="clos_ioc"]
+    click link    //a[@class="nav5"]
+    Comment    账号管理
+    click link    //a[@class="new_cre"]
+    input text    id=realName    嘻嘻1
+    input text    id=telephone    00016110201
+    click element    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[1]/div/div[1]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[2]/div/div[1]/div[1]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[2]/div/div[1]/div[2]/div[2]/div/div[1]
+    click link    id=addUser
+
+a授课-添加学员（循环）
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc
+    ...    ELSE    打开首页-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    15201569320
+    input text    id=password    123456
+    click element    id=submit
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    sleep    5
+    click element    //a[@class="addStudent ad"]
+    : FOR    ${i}    IN RANGE    5
+    \    sleep    2
+    \    click element    //a[@class="add"]
+    \    Comment    ${tmp1}    Evaluate    ${xueyuan}${i}
+    \    Comment    Log To Console    ${tmp1}
+    \    Comment    ${tmp2}    Evaluate    ${xueyuanphome}${i}
+    \    input text    name=stuName    ${xueyuan}${i}
+    \    input text    name=stuMobile    ${xueyuanphone}${i}
+    \    click element    id=benci
+    \    click element    //input[@class="addStudentBtn f18 style"]
+    \    sleep    2
+    \    click element    //*[@id="addDialog2"]/div[2]/div[2]/div[2]/a
+    click element    //span[@class="sameheader-username"]
+    click element    //a[contains(text(),'退出')]
+
+a授课-添加学员（单个）
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc
+    ...    ELSE    打开首页-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    15201569320
+    input text    id=password    123456
+    click element    id=submit
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    sleep    5
+    click element    //a[@class="addStudent ad"]
+    click element    //a[@class="add"]
+    input text    name=stuName    张胜男
+    input text    name=stuMobile    00012365487
+    click element    id=benci
+    click element    //input[@class="addStudentBtn f18 style"]
+    sleep    2
+    click element    //*[@id="addDialog2"]/div[2]/div[2]/div[2]/a
+
+b登录前台
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开首页-ff    ${qt_url}
+    ...    ELSE IF    "${browser}"=="gc"    打开首页-gc    ${qt_url}
+    ...    ELSE    打开首页-ie    ${qt_url}
+    Maximize Browser Window
+    input text    id=username    ${username}
+    input text    id=password    ${userpwd}
+    click element    id=submit
+
+axx_打开管理页面
+    打开首页-gc    http://guanli.aixuexi.com/
+    Maximize Browser Window
+
+axx_打开前台页面
+    打开首页-gc    http://www.aixuexi.com/
+    Maximize Browser Window
+
+浏览器提示框确认
+    sleep    2
+    ${msg}    confirm Action
+    Comment    ${res}    Set Variable If    "${notice}" in "${msg}"    true    false
+    Comment    Should Be Equal As Strings    ${res}    true
+    Choose Ok On Next Confirmation
+
+浏览器提示框-取消
+    sleep    6
+    ${msg}    confirm Action
+    Comment    ${res}    Set Variable If    "${notice}" in "${msg}"    true    false
+    Comment    Should Be Equal As Strings    ${res}    true
+    Choose Cancel On Next Confirmation
+
+axx_查询验证码
+    [Arguments]    ${phone}
+    ${res}    Get Mysql Item    SELECT * FROM `notify_record` WHERE contact='${phone}' ORDER BY add_time DESC;    content
+    [Return]    ${res}
+
+存在就点击
+    [Arguments]    ${xpath}
+    ${res}    Run Keyword and return status    Page Should Contain    ${xpath}
+    Run Keyword If    ${res}    click element    ${xpath}
+
+diy_打开页面
+    打开首页-gc    http://diy.aixuexi.com/resource.html
+    Maximize Browser Window

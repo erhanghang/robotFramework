@@ -1,0 +1,2246 @@
+*** Settings ***
+Resource          基础动作.txt
+Library           Selenium2Library
+
+*** Variables ***
+${url}            http://www.aixuexi.com
+${browser}        gc
+${qtuser}         15100000${houzhui}
+${qtpassword}     123456
+${htuser}         qiyajing@gaosiedu.com
+${htpasswd}       123456
+${qianzhui}       shw    # 前缀
+${houzhui}        002    # 三位数字
+${gl_phone}       15100000${houzhui}    # 学校管理手机号
+${jgsc_name}      ${qianzhui}首冲${houzhui}    #首冲计费机构名称
+${jgjieti_name}    ${qianzhui}阶梯${houzhui}    #阶梯计费机构名称
+${jgjituan_name}    ${qianzhui}集团${houzhui}    #集团计费机构名称
+${jgwy_name}      ${qianzhui}外研${houzhui}    #外研机构计费名称
+${ls_name}        ${qianzhui}老师${houzhui}    # 老师名称
+${ls_phone}       15500001${houzhui}    # 老师手机号
+${bj_name}        ${qianzhui}测试班级${houzhui}    # 班级名称
+${qyjphone}       15201569320    #newbeike学校管理手机号（齐亚静）
+${diyurl}         http://diy.aixuexi.com/resource.html    #diy首页
+${diyuser}        aixuexi    #diy用户名
+${diypwd}         123456    #diy密码
+${zhishidian}     自动化知识点${houzhui}    #diy知识点
+${timu1}          自动化题模1${houzhui}    #diy题模1
+${wenjianjia1}    自动化文件夹1${houzhui}    #diy文件夹1
+${wenjianjia2}    自动化文件夹2${houzhui}    #diy文件夹2（嵌套于1）
+${kjlx}           课件类型${houzhui}    #课件类型名称
+${jclx}           教材类型${houzhui}    #碎片类型名称
+${timu2}          自动化题模2${houzhui}    # diy题模2
+${kjsp}           课件碎片${houzhui}    #diy课件碎片名称
+${jcsp}           教材碎片${houzhui}    #diy教材碎片名称
+
+*** Keywords ***
+打开页面
+    [Arguments]    ${url}
+    Run Keyword If    '${browser}'=='ff'    打开首页-ff    ${url}
+    ...    ELSE IF    '${browser}'=='gc'    打开首页-gc    ${url}
+    ...    ELSE    打开首页-ie    ${url}
+
+用户手机注册
+    [Arguments]    ${username}    ${userpwd}
+    打开页面    ${gic_url}
+    sleep    2
+    等待    id=idOnlineLogin
+    click element    id=idOnlineLogin
+    等待    id=id_mobile
+    input text    id=id_mobile    ${username}
+    click element    //input[@id="id_get_code"]
+    : FOR    ${i}    IN RANGE    1000
+    \    等待    //img[@class="captcha"]
+    \    click element    //img[@class="captcha"]
+    \    sleep    2
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=id_captcha_register_1    ${tmp}
+    \    sleep    2
+    \    click element    //button[@onclick="sendMobileCheck('no')"]
+    \    sleep    15
+    \    ${res}    Run Keyword and return status    Element Should Not Be Visible    //div[@id="dis_vilaCode"]
+    \    Exit For Loop If    ${res}
+    ${id}    ${code}    获取验证码    ${username}
+    ${id0}    Evaluate    ${id}-1
+    Switch Browser    ${id0}
+    input text    id=id_checkCode    ${code}
+    input text    id=id_password1    ${userpwd}
+    input text    id=id_password2    ${userpwd}
+    Select Checkbox    //input[@type="checkbox"][1]
+    Click Button    id=btnRegion
+    Page Should Contain    注册成功
+    close browser
+
+用户登录
+    打开页面    ${gic_url}
+    Set Selenium Speed    0.2
+    Maximize Browser Window
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    input text    id=txtUserName    ${username}
+    \    sleep    1
+    \    input text    id=txtUserPwd    ${userpwd}
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=txtVilCode    ${tmp}
+    \    Click Button    id=btnLogin
+    \    sleep    3
+    \    ${res}    Run Keyword and return status    Page Should Contain    登出
+    \    Exit For Loop If    ${res}
+    等待    //a[@href="/zh-cn/account/my_center/"]/p
+    ${tmp}    get text    //a[@href="/zh-cn/account/sso/signout"]/p
+    ${res}    Set Variable if    '${tmp}'=='登出'    "login success!"    "login fail!!!"
+    log    ${res}
+
+用户登录_打包
+    打开页面    ${gic_url_db}
+    Set Selenium Speed    0.2
+    Maximize Browser Window
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    input text    id=txtUserName    ${username}
+    \    sleep    1
+    \    input text    id=txtUserPwd    ${userpwd}
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=txtVilCode    ${tmp}
+    \    Click Button    id=btnLogin
+    \    sleep    3
+    \    ${res}    Run Keyword and return status    Page Should Contain    登出
+    \    Exit For Loop If    ${res}
+    等待    //a[@href="/zh-cn/account/my_center/"]/p
+    ${tmp}    get text    //a[@href="/zh-cn/account/sso/signout"]/p
+    ${res}    Set Variable if    '${tmp}'=='登出'    "login success!"    "login fail!!!"
+    log    ${res}
+
+资料备案
+    [Arguments]    ${username}    ${userpwd}
+    用户登录
+    Click element    //*[@id="dh_account"]
+    Click element    //*[@id="dh_account_manage"]
+    等待    //a[@href="/zh-cn/account/to_edit_info/"]/span
+    Click element    //a[@href="/zh-cn/account/to_edit_info/"]/span
+    sleep    3
+    input text    name=company_name    营业执照上的公司名称${username}
+    等待    //*[@id="P1"]
+    Select From List    //*[@id="P1"]    北京市
+    sleep    1
+    等待    //*[@id="C1"]
+    Select From List    //*[@id="C1"]    海淀区
+    input text    name=work_address    测试地址办公地址办公地址办公地址办公地址
+    Select From List    //*[@id="P2"]    北京市
+    sleep    1
+    等待    //*[@id="C2"]
+    Select From List    //*[@id="C2"]    海淀区
+    input text    name=register_address    测试地址注册地址注册地址注册地址注册地址注册地址
+    input text    name=contact_name    首云测试人员
+    input text    id=com_tel    010-5958556
+    input text    name=email    panational@qq.com
+    Click element    //*[@id="up_imgFile_yyzz"]
+    文件上传
+    Click element    //*[@id="up_imgFile_yyzzt"]
+    文件上传
+    等待    //span[contains(text(),"免费获取验证码")]
+    click element    //span[contains(text(),"免费获取验证码")]
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    ${id}    ${code}    获取验证码    ${username}
+    ${id0}    Evaluate    ${id}-1
+    Switch Browser    ${id0}
+    input text    name=mobile_checkcode    ${code}
+    click element    //input[@onclick="companySub();"]
+    关闭
+    close browser
+
+备案审核
+    [Arguments]    ${username}
+    用户登录op    ${gic_op}
+    等待    //span[contains(text(),"备案管理")]
+    click element    //span[contains(text(),"备案管理")]
+    等待    //a[@href="/customer_record/new"]
+    click element    //a[@href="/customer_record/new"]
+    等待    name=account_name
+    input text    name=account_name    ${username}
+    click button    //button[@onclick="submitForm();"]
+    等待    //table/tbody/tr/td[10]/a[2]
+    click element    //table/tbody/tr/td[10]/a[2]
+    等待    //a[@onclick="passOrNot(this);"]
+    sleep    2
+    click element    //a[@onclick="passOrNot(this);"]
+    sleep    2
+    等待    id=btnConfirm
+    click button    id=btnConfirm
+    close browser
+
+后台充值
+    [Arguments]    ${username}
+    用户登录op    ${gic_op}
+    等待    //span[contains(text(),"运营管理")]
+    click element    //span[contains(text(),"运营管理")]
+    等待    //a[@href="/customer_account/"]
+    click element    //a[@href="/customer_account/"]
+    等待    name=account_name
+    input text    name=account_name    ${username}
+    click button    //button[@onclick="submitForm();"]
+    等待    //table/tbody/tr[1]/td[12]/a[5]/i
+    click element    //table/tbody/tr[1]/td[12]/a[5]/i
+    等待    //span[contains(text(),"主账户充值")]
+    click element    //span[contains(text(),"主账户充值")]
+    等待    //li[contains(text(),"副账户充值")]
+    click element    //li[contains(text(),"副账户充值")]
+    等待    name=amount
+    input text    name=amount    1000
+    click button    id=chargesubmit
+    等待    name=account_name
+    input text    name=account_name    ${username}
+    click button    //button[@onclick="submitForm();"]
+    等待    //table/tbody/tr[2]/td[12]/a[5]/i
+    click element    //table/tbody/tr[2]/td[12]/a[5]/i
+    等待    //span[contains(text(),"主账户充值")]
+    click element    //span[contains(text(),"主账户充值")]
+    等待    //li[contains(text(),"副账户充值")]
+    click element    //li[contains(text(),"副账户充值")]
+    等待    name=amount
+    input text    name=amount    1000
+    click button    id=chargesubmit
+    close browser
+
+打包创建
+    Comment    确认
+    等待    id=id_app_name
+    input text    id=id_app_name    ${vdc}
+    click element    //p[contains(text(),'${country}')]
+    等待    //p[contains(text(),'${city}')]
+    click element    //p[contains(text(),'${city}')]
+    等待    //*[@id="id_guide1_next"]
+    Click element    //*[@id="id_guide1_next"]
+    等待    //*[@id="slider-range-min-wan"]
+    Drag And Drop By Offset    //*[@id="slider-range-min-wan"]    -140    0
+    等待    //*[@name="ip_p"][3]
+    Click element    //*[@name="ip_p"][3]
+    等待    //*[@id="id_lan1_net_id"]
+    input text    //*[@id="id_lan1_net_id"]    192.168.1.0
+    input text    //*[@id="id_lan1_mask"]    24
+    Comment    input text    //*[@id="id_lan2_net_id"]    192.168.0.0
+    Comment    input text    //*[@id="id_lan2_mask"]    24
+    Click element    //*[@id="id_guide2_next"]
+    ${tmp1}    Evaluate    "${vm}"[0:len("${vm}")-3]
+    ${tmp2}    Evaluate    "${vm}"[-3:]
+    等待    //*[@id="id_vm_name"]
+    input text    //*[@id="id_vm_name"]    ${tmp1}
+    input text    //*[@id="id_vm_number"]    ${tmp2}
+    input text    id=id_vm_password    ${password}
+    input text    id=id_vm_password_confirm    ${password}
+    Comment    增加新硬盘
+    等待    //*[@os_type="${os_tab}"]
+    click element    //*[@os_type="${os_tab}"]
+    sleep    1
+    ${os_list}    Set Variable    os_sel_${os_tab}
+    Select From List By Index    //*[@id="${os_list}"]    ${os_item}
+    等待    //*[@id="id_guide3_next"]
+    click element    //*[@id="id_guide3_next"]
+    等待    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+    sleep    1
+    click button    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+    sleep    2
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    打包创建云主机
+
+创建VDC
+    [Arguments]    ${vdc}    ${country}    ${city}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_app"]
+    Click element    //div[@onclick="javascrpt:window.location = '/zh-cn/cloud/app_add'"]
+    等待    //input[@id="id_app_name"]
+    input text    id=id_app_name    ${vdc}
+    Click element    //p[text()='${country}']
+    等待    //p[text()='${city}']
+    click element    //p[text()='${city}']
+    ${res}    Run Keyword and return status    Element Should Be Enabled    //*[@id="id_is_add_gic"]
+    Run Keyword If    ${res}    select checkbox    //*[@id="id_is_add_gic"]
+    Comment    select checkbox    //*[@id="id_is_add_gic"]
+    等待    id=sub-btn
+    click link    id=sub-btn
+    提示框
+    sleep    12
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    打包创建虚拟数据中心
+
+购买GPN带宽
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_gpn"]
+    Click button    //input[@value="购买/终止GPN带宽"]
+    等待    //*[@id="slider-range-min"]
+    Drag And Drop By Offset    //*[@id="slider-range-min"]    -130    0
+    click element    //div[@onclick="sub()"]
+    提示框
+    提示框
+    查看任务    申请GPN
+
+设置GPNIP
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_gpn"]
+    input text    //*[@id="id_address"]    172.16.2.0
+    input text    //*[@id="id_mask"]    24
+    Click element    //*[@id="id_gpn_modify"]
+    提示框
+    提示框
+
+加入GPN
+    [Arguments]    ${vdc}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_gpn"]
+    等待    //div[contains(text(),'${vdc}')]/following-sibling::div[1]/input
+    click element    //div[contains(text(),'${vdc}')]/following-sibling::div[1]/input
+    提示框
+    提示框
+    查看任务    加入GPN
+
+配置GPN
+    [Arguments]    ${vm}    ${GPNIP}
+    配置界面    ${vm}
+    等待    //input[@obj_type="gic"]
+    input text    //input[@obj_type="gic"]    ${GPNIP}
+    click element    //input[@obj_type="gic"]/following-sibling::p[2]/a
+    提示框
+    提示框
+    等待    //span[contains(text(),'IP写入主机')]
+    Click element    //span[contains(text(),'IP写入主机')]
+    提示框
+    提示框
+    查看任务    IP写入云主机
+
+申请私网
+    [Arguments]    ${vdc}    ${LANIP}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_lan"]
+    等待    //td[contains(text(),'${vdc}')]/following-sibling::td[4]/a
+    Click element    //td[contains(text(),'${vdc}')]/following-sibling::td[4]/a
+    等待    id=id_net_id
+    ${LANIP2}    Evaluate    "${LANIP}"[0:10]+"0"
+    input text    id=id_net_id    ${LANIP2}
+    input text    id=id_mask    24
+    Click element    //input[@onclick="sub()"]
+    提示框
+    提示框
+    查看任务    创建网络
+
+配置私网
+    [Arguments]    ${vm}    ${LANIP}
+    配置界面    ${vm}
+    input text    //input[@obj_type="lan"]    ${LANIP}
+    Click element    //input[@obj_type="lan"]/following-sibling::p[2]/a
+    提示框
+    提示框
+    click element    //a[@onclick="config_ip_to_cloud()"]
+    提示框
+    提示框
+    查看任务    IP写入云主机
+
+创建主机
+    [Arguments]    ${vdc}    ${vm}    ${os_tab}    ${os_item}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    Select From List    //*[@id="id_app_vm_sel"]    ${vdc}
+    Click button    //input[@onclick="vm_create_open()"]
+    ${tmp1}    Evaluate    "${vm}"[0:len("${vm}")-3]
+    ${tmp2}    Evaluate    "${vm}"[-3:]
+    等待    //*[@id="id_vm_name"]
+    input text    //*[@id="id_vm_name"]    ${tmp1}
+    input text    //*[@id="id_vm_number"]    ${tmp2}
+    input text    id=id_vm_password    ${password}
+    input text    id=id_vm_password_confirm    ${password}
+    等待    //*[@os_type="${os_tab}"]
+    click element    //*[@os_type="${os_tab}"]
+    sleep    1
+    ${os_list}    Set Variable    os_sel_${os_tab}
+    Select From List By Index    //*[@id="${os_list}"]    ${os_item}
+    select checkbox    name=ckb_pub
+    等待    //*[@id="ok"]
+    click element    //*[@id="ok"]
+    提示框
+    sleep    12
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    创建云主机
+
+主机关机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="poweroff"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="poweroff"]
+    sleep    3
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    关闭
+
+主机开机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="poweron"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="poweron"]
+    sleep    3
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    运行
+
+主机重启
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="reset"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="reset"]
+    sleep    3
+    提示框
+    查看任务    操作云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //td[@class="YunZhuJiGuanLi-Table-YunXing"]/span
+    Should Be Equal As Strings    ${tmp}    运行
+
+解绑公网
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //table/tbody/tr/td[7]
+    ${tmp1}    findstr    ${tmp}    公网IP
+    等待    //input[@name="nc"][${tmp1}]
+    Click element    //input[@name="nc"][${tmp1}]
+    提示框
+    sleep    3
+    提示框
+    查看任务    网络通断
+
+购买公网
+    [Arguments]    ${vdc}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_app"]
+    等待    //div[contains(text(),'${vdc}')]/following-sibling::div[2]/div
+    Click element    //div[contains(text(),'${vdc}')]/following-sibling::div[2]/div
+    Comment    等待    //p[contains(text(),'双线BGP')]
+    Comment    Click element    //p[contains(text(),'双线BGP')]
+    等待    //*[@id="slider-range-min-wan"]
+    Drag And Drop By Offset    //*[@id="slider-range-min-wan"]    -140    0
+    click element    //div[@onclick="sub_pub_form()"]
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    创建公网
+
+清除公网
+    配置界面    ${vm}
+    Clear Element Text    //input[@obj_type="pub"]
+    click element    //input[@obj_type="pub"]/following-sibling::p[2]/a
+    提示框
+    sleep    2
+    提示框
+    写入云主机
+
+删除公网IP
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_wan"]
+    等待    //span[contains(text(),'${vdc}')]/parent::div/parent::div/following-sibling::a
+    Click element    //span[contains(text(),'${vdc}')]/parent::div/parent::div/following-sibling::a
+    等待    //div[@class="goumaizhongzhi_del"]
+    Click element    //div[@class="goumaizhongzhi_del"]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除IP网段
+
+删除公网带宽
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_wan"]
+    等待    //div[contains(text(),'${vdc}')]/parent::div/following-sibling::a[2]
+    Click element    //div[contains(text(),'${vdc}')]/parent::div/following-sibling::a[2]
+    等待    //*[@id="slider-range-min"]
+    Drag And Drop By Offset    //*[@id="slider-range-min"]    -145    0
+    click element    //div[@onclick="sub()"]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除网络
+
+增加内核
+    配置界面    ${vm}
+    等待    //p[@cpu="2" and @name="cpu"]
+    click element    //p[@cpu="2" and @name="cpu"]
+    click element    //div[@onclick="sub_vm()"]
+    提示框
+    提示成功    云主机更新任务生成成功,请等待任务处理，谢谢！
+    查看任务    更改云主机
+    配置界面    ${vm}
+    ${tmp1}    Get Element Attribute    //p[@cpu="2" and @name="cpu"]@class
+    ${msg}    Set Variable    select_me
+    ${res1}    Set Variable If    "${msg}" in "${tmp1}"    true    false
+    Should Be Equal As Strings    ${res1}    true
+
+增加内存
+    配置界面    ${vm}
+    等待    //p[@ram="4" and @name="ram"]
+    click element    //p[@ram="4" and @name="ram"]
+    click element    //div[@onclick="sub_vm()"]
+    提示框
+    提示成功    云主机更新任务生成成功,请等待任务处理，谢谢！
+    查看任务    更改云主机
+    配置界面    ${vm}
+    ${tmp2}    Get Element Attribute    //p[@ram="4" and @name="ram"]@class
+    ${msg}    Set Variable    select_me
+    ${res2}    Set Variable If    "${msg}" in "${tmp2}"    true    false
+    Should Be Equal As Strings    ${res2}    true
+
+增加硬盘
+    配置界面    ${vm}
+    click element    //p[@id="add_disk"]
+    等待    //*[@id="slider-range-min1"]
+    Drag And Drop By Offset    //*[@id="slider-range-min1"]    -140    0
+    click element    //div[@onclick="sub_vm()"]
+    提示框
+    提示成功    云主机更新任务生成成功,请等待任务处理，谢谢！
+    查看任务    更改云主机
+    配置界面    ${vm}
+    ${res3}    get text    //div[@id='id_disk_div1']/table/tbody/tr/td[2]/div[1]/p[1]
+    Should Be Equal As Strings    ${res3}    200G
+
+删除硬盘
+    配置界面    ${vm}
+    等待    //p[@id="disk_shanchu"]
+    click element    //p[@id="disk_shanchu"]
+    等待    //img[@id="id_del_img1"]
+    click element    //img[@id="id_del_img1"]
+    等待    //div[@id="id_del_div1"]/div[2]/div[1]
+    click element    //div[@id="id_del_div1"]/div[2]/div[1]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除硬盘
+
+创建安全屋
+    购买公网
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_more"]
+    Click element    //*[@id="dh_resource_firewall"]
+    等待    //*[@id="id_app_firewall_sel"]
+    Select From List    //*[@id="id_app_firewall_sel"]    ${vdc}
+    Click button    //input[@onclick="firewall_create_open()"]
+    等待    //*[@id="id_firewall_name"]
+    input text    //*[@id="id_firewall_name"]    ${sec}
+    select checkbox    //input[@net_num="1"]
+    select checkbox    //input[@name="ckb_pri"]
+    click element    //div[@onclick="create_firewall()"]
+    提示框
+    sleep    12
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    创建安全屋
+    Comment    Click element    //*[@id="dh_resource"]
+    Comment    Click element    //*[@id="dh_resource_more"]
+    Comment    Click element    //*[@id="dh_resource_firewall"]
+    Comment    云主机搜索    ${sec}
+    Comment    Click element    //td[@class="YunZhuJiGuanLi-Table-YunXing-Finally"]/a/span
+    Comment    ${tmp1}    get text    //div[contains(text(),"公网IP")]/following-sibling::div/p
+    Comment    ${tmp2}    get text    //div[contains(text(),"私网IP")]/following-sibling::div/div/p
+    Comment    ${s_ip}    Get Ini Value    globe    ip
+    Comment    网络测试    ${s_ip}    ${password}    ${tmp1}
+    Comment    网络测试    ${s_ip}    ${password}    ${tmp2}
+
+删除安全屋
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_more"]
+    Click element    //*[@id="dh_resource_firewall"]
+    云主机搜索    ${sec}
+    click element    //span[contains(text(),"删除")]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除安全屋
+
+解绑私网
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //table/tbody/tr/td[7]
+    ${tmp1}    findstr    ${tmp}    私网
+    等待    //input[@name="nc"][${tmp1}]
+    Click element    //input[@name="nc"][${tmp1}]
+    提示框
+    sleep    2
+    提示框
+    查看任务    网络通断
+
+清除私网
+    配置界面    ${vm}
+    Clear Element Text    //input[@obj_type="lan"]
+    click element    //input[@obj_type="lan"]/following-sibling::p[2]/a
+    提示框
+    sleep    2
+    提示框
+    写入云主机
+
+删除私网
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_lan"]
+    Click element    //td[contains(text(),'${vdc}')]/following-sibling::td[4]/a
+    等待    //div[@class="goumaizhongzhi_del_network"]
+    Click element    //div[@class="goumaizhongzhi_del_network"]
+    提示框
+    sleep    2
+    提示框
+    查看任务    删除网络
+
+删除云主机
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="delete"]
+    click element    //div[@class="YunZhuJiGuanLi-Table-GengDuoCaoZuo" and @action="delete"]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除云主机
+
+解绑GPN
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    ${tmp}    get text    //table/tbody/tr/td[7]
+    ${tmp1}    findstr    ${tmp}    GPN
+    等待    //input[@name="nc"][${tmp1}]
+    Click element    //input[@name="nc"][${tmp1}]
+    提示框
+    sleep    2
+    提示框
+    查看任务    网络通断
+
+清除GPN
+    配置界面    ${vm}
+    Clear Element Text    //input[@obj_type="gic"]
+    click element    //input[@obj_type="gic"]/following-sibling::p[2]/a
+    提示框
+    sleep    2
+    提示框
+    写入云主机
+
+删除GPN
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_gpn"]
+    Click button    //input[@value="购买/终止GPN带宽"]
+    等待    //*[@id="slider-range-min"]
+    Drag And Drop By Offset    //*[@id="slider-range-min"]    -145    0
+    click element    //div[@onclick="sub()"]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除GPN
+
+删除VDC
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_app"]
+    等待    //div[@class="gmyzj" and contains(text(),'${vdc}')]/following-sibling::div/div/img
+    click element    //div[@class="gmyzj" and contains(text(),'${vdc}')]/following-sibling::div/div/img
+    提示框
+    sleep    2
+    提示框
+    查看任务    删除虚拟数据中心
+
+申请同城专线
+    [Arguments]    ${country}    ${city}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_cpn"]
+    等待    //input[@onclick="javascript:window.location ='/zh-cn/shop/cpns/'"]
+    click element    //input[@onclick="javascript:window.location ='/zh-cn/shop/cpns/'"]
+    等待    //p[text()='${country}']
+    click element    //p[text()='${country}']
+    等待    //p[contains(text(),'${city}')]
+    click element    //p[contains(text(),'${city}')]
+    等待    //*[@id="slider-range-city"]
+    Drag And Drop By Offset    //*[@id="slider-range-city"]    -140    0
+    click element    //a[@onclick="sub()"]
+    提示框
+    提示成功    同城专线订单生成成功，资源任务正在执行,请等待,谢谢！
+    查看任务    创建同城专线
+
+加入同城专线
+    [Arguments]    ${vdc1}    ${vdc2}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_cpn"]
+    等待    id=city_name
+    input text    id=city_name    专线1
+    Click element    //input[@onclick="cpn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    加入同城专线
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_cpn"]
+    等待    id=city_name
+    input text    id=city_name    专线1
+    Click element    //input[@onclick="cpn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc2}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc2}')]/following-sibling::input
+    Comment    click element    //a[@onclick="sub()"]
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    加入同城专线
+
+申请省际专线
+    [Arguments]    ${country}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_ipn"]
+    等待    //input[@onclick="javascript:window.location ='/zh-cn/shop/ppns/'"]
+    click element    //input[@onclick="javascript:window.location ='/zh-cn/shop/ppns/'"]
+    等待    //p[contains(text(),'${country}')]
+    click element    //p[contains(text(),'${country}')]
+    等待    //*[@id="slider-range-city"]
+    Drag And Drop By Offset    //*[@id="slider-range-city"]    -140    0
+    click element    //a[@onclick="sub()"]
+    提示框
+    提示成功    省际专线订单生成成功，资源任务正在执行,请等待,谢谢！
+    查看任务    创建省际专线
+
+加入省际专线
+    [Arguments]    ${vdc1}    ${vdc2}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_ipn"]
+    等待    id=country_name
+    input text    id=country_name    专线1
+    Click element    //input[@onclick="ipn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    加入省际专线
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_ipn"]
+    等待    id=country_name
+    input text    id=country_name    专线1
+    Click element    //input[@onclick="ipn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc2}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc2}')]/following-sibling::input
+    Comment    click element    //a[@onclick="sub()"]
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    加入省际专线
+
+删除同城专线
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_cpn"]
+    等待    id=city_name
+    input text    id=city_name    专线1
+    Click element    //input[@onclick="cpn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //*[@id="slider-range-city"]
+    Drag And Drop By Offset    //*[@id="slider-range-city"]    -145    0
+    click element    //a[@onclick="sub()"]
+    提示框
+    sleep    2
+    删除提示框
+    Comment    提示成功    同城专线订单生成成功，资源任务正在执行,请等待,谢谢！
+    Comment    查看任务    创建同城专线
+    提示框
+    查看任务    删除同城专线
+
+删除省际专线
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_ipn"]
+    等待    id=country_name
+    input text    id=country_name    专线1
+    Click element    //input[@onclick="ipn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //*[@id="slider-range-city"]
+    Drag And Drop By Offset    //*[@id="slider-range-city"]    -145    0
+    click element    //a[@onclick="sub()"]
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除省际专线
+    Comment    提示成功    省际专线订单生成成功，资源任务正在执行,请等待,谢谢！
+    Comment    查看任务    创建省际专线
+
+定制模板
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    云主机搜索    ${vm}
+    等待    //span[contains(text(),'更多操作')]
+    Click element    //span[contains(text(),'更多操作')]
+    等待    //div[@action="clonetemplate"]
+    click element    //div[@action="clonetemplate"]
+    等待    id=template_name
+    input text    id=template_name    PGQMB001
+    click element    //div[@id="dialog-confirm"]/following-sibling::div/div/button[1]
+    查看任务    定制模板
+
+批量创建流程
+    [Arguments]    ${vdc}    ${country}    ${city}    ${vm}    ${os_tab}    ${os_item}
+    ...    ${GPNIP}    ${LANIP}
+    创建VDC    ${vdc}    ${country}    ${city}
+    购买公网    ${vdc}
+    创建主机    ${vdc}    ${vm}    ${os_tab}    ${os_item}
+    配置GPN    ${vm}    ${GPNIP}
+    申请私网    ${vdc}    ${LANIP}
+    配置私网    ${vm}    ${LANIP}
+
+移除GPN
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_gpn"]
+    等待    //div[contains(text(),'${vdc}')]/following-sibling::div[1]/input
+    click element    //div[contains(text(),'${vdc}')]/following-sibling::div[1]/input
+    提示框
+    提示框
+    查看任务    移除GPN
+
+移除同城专线
+    [Arguments]    ${vdc1}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_cpn"]
+    等待    id=city_name
+    input text    id=city_name    专线1
+    Click element    //input[@onclick="cpn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    移除同城专线
+
+移除省际专线
+    [Arguments]    ${vdc1}
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_wan_product"]
+    Click element    //*[@id="dh_resource_ipn"]
+    等待    id=country_name
+    input text    id=country_name    专线1
+    Click element    //input[@onclick="ipn_search()"]
+    sleep    2
+    等待    //a[contains(text(),'修改配置')]
+    Click element    //a[contains(text(),'修改配置')]
+    等待    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    Click element    //div[contains(text(),'${vdc1}')]/following-sibling::input
+    提示框
+    ${msg}    confirm Action
+    Choose Ok On Next Confirmation
+    查看任务    移除省际专线
+
+同步模板
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    等待    //a[@href="/zh-cn/cloud/vm_template/"]
+    Click element    //a[@href="/zh-cn/cloud/vm_template/"]
+    等待    name=keywords
+    input text    name=keywords    PGQMB001
+    Click element    //input[@onclick="search();"]
+    sleep    2
+    等待    //div[contains(text(),'更多操作')]
+    Click element    //div[contains(text(),'更多操作')]
+    等待    //a[contains(@href,'vm_template_sync')]
+    Click element    //a[contains(@href,'vm_template_sync')]
+    等待    //table/tbody/tr[1]/td[1]/input
+    Click element    //table/tbody/tr[1]/td[1]/input
+    click button    id=btnConf
+    提示框
+    提示框
+    查看任务    同步模板
+
+删除模板
+    Click element    //*[@id="dh_resource"]
+    Click element    //*[@id="dh_resource_cloud"]
+    Click element    //*[@id="dh_resource_vm"]
+    等待    //a[@href="/zh-cn/cloud/vm_template/"]
+    Click element    //a[@href="/zh-cn/cloud/vm_template/"]
+    等待    name=keywords
+    input text    name=keywords    PGQMB001
+    Click element    //input[@onclick="search();"]
+    sleep    2
+    等待    //div[contains(text(),'更多操作')]
+    Click element    //div[contains(text(),'更多操作')]
+    等待    //a[contains(@class,'link_del_click']
+    Click element    //a[contains(@class,'link_del_click']
+    提示框
+    删除提示框
+    提示框
+    查看任务    删除模板
+
+增加新硬盘
+    等待    //p[@id="add_disk"]
+    click element    //p[@id="add_disk"]
+    等待    //p[@id="add_disk"]
+    click element    //p[@id="add_disk"]
+    等待    //input[@type="radio" and \ @value="cap_00200"]
+    click element    //input[@type="radio" and \ @value="cap_00200"]
+
+忘记密码
+    打开页面    ${gic_url}
+    sleep    2
+    sleep    2
+    等待    //a[contains(text(),'忘记密码')]
+    click element    //a[contains(text(),'忘记密码')]
+    等待    id=id_username
+    input text    id=id_username    ${username}
+    click element    //input[@value="mobile"]
+    Comment    \    ${i}    IN RANGE    1000
+    Comment    \    click element    //img[@alt="captcha"]
+    Comment    \    sleep    2
+    Comment    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    Comment    \    ${tmp}    shibie    ${url}
+    Comment    \    Clear Element Text    //input[@id="id_pwdCaptcha_1"]
+    Comment    \    input text    //input[@id="id_pwdCaptcha_1"]    ${tmp}
+    Comment    \    Click Button    id=btnRegion
+    Comment    \    sleep    5
+    Comment    \    ${res}    Run Keyword and return status    Page Should Contain Element    //input[@id="id_mobile"]
+    Comment    \    Exit For Loop If    ${res}
+    click element    //input[@id="id_get_code"]
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    sleep    2
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=id_captcha_password_1    ${tmp}
+    \    sleep    2
+    \    click element    //button[@onclick="sendMobileCheck(this, 'no')"]
+    \    sleep    10
+    \    ${res}    Run Keyword and return status    Element Should Not Be Visible    //div[@id="dis_vilaCode"]
+    \    Exit For Loop If    ${res}
+    ${id}    ${code}    获取验证码    ${username}
+    ${id0}    Evaluate    ${id}-1
+    Switch Browser    ${id0}
+    input text    id=txtVilidateCode    ${code}
+    click button    id=btnRegion
+    等待    id=new_passwd
+    ${newpasswd}    set Variable    12345678aaa
+    input text    id=new_passwd    ${newpasswd}
+    input text    id=id_new_passwd_confirm    ${newpasswd}
+    click button    id=btnRegion
+    Page Should Contain    密码修改成功，且新密码已生效！
+    close browser
+    [Return]    ${newpasswd}
+
+修改密码
+    [Arguments]    ${password}
+    用户登录p    ${password}
+    等待    //*[@id="dh_account"]
+    Click element    //*[@id="dh_account"]
+    等待    //*[@id="dh_account_security"]
+    Click element    //*[@id="dh_account_security"]
+    等待    //div[@class="bjtu2" and contains(text(),'修改密码')]
+    Click element    //div[@class="bjtu2" and contains(text(),'修改密码')]
+    等待    //input[@id="id_old_passwd"]
+    input text    //input[@id="id_old_passwd"]    ${password}
+    input text    //input[@id="id_new_passwd"]    ${userpwd}
+    input text    //input[@id="id_new_passwd_confirm"]    ${userpwd}
+    click element    //span[@id="checkcode_passwd"]
+    提示成功    验证码下发成功
+    ${id}    ${code}    获取验证码    ${username}
+    ${id0}    Evaluate    ${id}-1
+    Switch Browser    ${id0}
+    input text    name=passwd_checkcode    ${code}
+    click element    //div[@onclick="sub_passwd()"]
+    sleep    10
+    Page Should Contain    密码修改成功，请点击
+    click element    //a[@href="/account/sso/signout/"]
+    sleep    3
+    Page Should Contain    CDS用户登录
+    close browser
+    用户登录p    ${userpwd}
+    close browser
+
+用户登录p
+    [Arguments]    ${userpwd}
+    打开页面    ${gic_url}
+    Set Selenium Speed    0.2
+    Maximize Browser Window
+    : FOR    ${i}    IN RANGE    1000
+    \    click element    //img[@class="captcha"]
+    \    input text    id=txtUserName    ${username}
+    \    sleep    1
+    \    input text    id=txtUserPwd    ${userpwd}
+    \    ${url}    Get Element Attribute    //img[@alt="captcha"]@src
+    \    ${tmp}    shibie    ${url}
+    \    input text    id=txtVilCode    ${tmp}
+    \    Click Button    id=btnLogin
+    \    sleep    3
+    \    ${res}    Run Keyword and return status    Page Should Contain    登出
+    \    Exit For Loop If    ${res}
+    等待    //a[@href="/zh-cn/account/my_center/"]/p
+    ${tmp}    get text    //a[@href="/zh-cn/account/sso/signout"]/p
+    ${res}    Set Variable if    '${tmp}'=='登出'    "login success!"    "login fail!!!"
+    log    ${res}
+
+用户邮箱注册
+    [Arguments]    ${usernamemail}    ${userpwd}
+    打开页面    ${gic_url}
+    sleep    2
+    等待    id=idOnlineLogin
+    click element    id=idOnlineLogin
+    等待    //input[@type="radio" and @value="email"]
+    click element    //input[@type="radio" and @value="email"]
+    等待    id=id_email
+    input text    id=id_email    ${usernamemail}
+    input text    id=id_password1    ${userpwd}
+    input text    id=id_password2    ${userpwd}
+    Select Checkbox    //input[@type="checkbox"][1]
+    Click Button    id=btnRegion
+    Page Should Contain    您的邮箱账号还没有激活
+    close browser
+
+b备课
+    click element    id=beike
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click element    //dd[@class="gradeList"]/a[1]
+    click element    //dd[@class="periodList"]/a[2]
+    click element    //div[@class="classType english"]/ul/li[2]
+    click element    //div[@class="left animated"]/ul/li[1]
+    Comment    click element    //div[@class="xx_sec_home"]/ul/li[2]
+    Select Window    new
+    Comment    等待    //li[@class="currentLesson"]
+    Comment    click element    //li[@class="currentLesson"]
+    Comment    Log To Console    "hhhhhh"
+    click link    //a[@class="jiangyi "]
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    click link    //a[@class="beike "]
+    click link    //a[@class="shilu "]
+    Select Window    self
+    Comment    click element    //span[@class="sameheader-username"]
+    Comment    click element    //a[contains(text(),'退出')]
+
+b授课
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    等待    //li[@class="currentLesson"]
+    click element    //li[@class="currentLesson"]
+    Select Window    new
+    click element    //div[@class="quanping-content"]
+    click element    id=kejian
+    sleep    2
+    Log To Console    he1
+    Select Frame    tag=iframe    0
+    Log To Console    he2
+    Comment    Select Frame    //*[@id="moduleId"]/div[3]/div[1]/iframe[1]
+    click element    //button[contains(text(),'下一页')]
+    click element    //li[@class="btn homework changePic js-leftbtn"]
+    click element    //ul[@class="addnow_tit"]/li[2]
+    click element    //ul[@class="addnow_tit"]/li[3]
+    sleep    5
+    click element    id=questionBtn
+    sleep    12
+    click element    //span[@class="score score1"]
+    click link    id=change
+    sleep    5
+    click element    //span[@class="score score3"]
+    click link    id=closeQuestion
+    sleep    5
+    click element    id=addScores
+    click element    //div[@class="jf_students"]/ul/li[2]
+    sleep    5
+    click element    //a[@class="jiajifenClose"]
+    sleep    5
+    click element    id=integralBtn
+    sleep    5
+    click element    //a[@class="rankingClose"]
+    sleep    3
+    click element    //li[@class="goback"]/a
+    sleep    5
+    select
+    click element    //span[@class="sameheader-username"]
+    click element    //a[contains(text(),'退出')]
+
+axx_管理员登录
+    axx_打开管理页面
+    input text    id=userName    ${htuser}
+    input text    id=passWord    ${htpasswd}
+    click element    //input[@value="登录"]
+
+axx_创建机构_首冲
+    等待    //a[@class="first sale"]    #进入销售管理
+    click link    //a[@class="first sale"]
+    等待    //a[@href="/institution/list"]    #进入客户管理
+    click link    //a[@href="/institution/list"]
+    等待    //a[@onclick="add()"]
+    click link    //a[@onclick="add()"]
+    等待    //input[@name="institutionType"][1]
+    Select Radio Button    institutionType    1    #选择测试机构
+    Select Radio Button    first_flag    0    #选择首冲计费规则
+    Select Radio Button    wy_opt    business_wy_close    #选择为普通机构
+    Select From List    //*[@name="managers[0].manageId"]    高凯林
+    Select From List    //*[@name="provinceId"]    北京市
+    sleep    2
+    Select From List    //*[@name="cityId"]    市辖区
+    sleep    2
+    Select From List    //*[@name="areaIdReal"]    海淀区
+    input text    //*[@name="signStartDate"]    2016-11-28\r\n    #合作有效期
+    input text    //*[@name="signEndDate"]    2017-11-28\r\n
+    input text    //*[@name="signInfo.managerName"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="signInfo.managerPhone"]    ${gl_phone}    #手机号
+    input text    //*[@id="2_tt"]    1    #合同签约价
+    input text    //*[@id="3_tt"]    1
+    input text    //*[@id="4_tt"]    0
+    input text    //*[@id="5_tt"]    0
+    input text    //*[@id="6_tt"]    0
+    input text    //*[@id="7_tt"]    0
+    input text    //*[@id="8_tt"]    0
+    click element    //*[@id="zhuanzhang"]    #选为转账
+    input text    //*[@name="signInfo.payComment"]    我可以免费创建！    #汇款备注
+    input text    //*[@name="contact.name"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="contact.telephone"]    ${gl_phone}
+    input text    //*[@name="contact.homePhone"]    0105958556
+    Select From List    //*[@name="contact.positionCode"]    校长
+    input text    //*[@name="contact.email"]    test@163.com
+    input text    //*[@name="insName"]    ${jgsc_name}
+    input text    //*[@name="invoice"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="empNumber"]    1000
+    click element    //*[@name="operatingRanges[0].subjectProductId"]    #经营学科范围
+    click element    //*[@ name="subjectVersionIns[0].subjectId"]    #意向学科&教材
+    sleep    1
+    Select From List    //select[@name="subjectVersionIns[0].bookVersions[0].id"]    全国版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[1].id"]    北师版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[2].id"]    沪教版
+    sleep    1
+    click element    //input[@value="22-11"]
+    click element    //input[@class="ok" and @type="button"]
+    sleep    2
+    click button    //button[@class="jbox-button jbox-button-focus"]
+    浏览器提示框确认
+
+axx_创建机构_阶梯
+    等待    //a[@class="first sale"]    #进入销售管理
+    click link    //a[@class="first sale"]
+    等待    //a[@href="/institution/list"]    #进入客户管理
+    click link    //a[@href="/institution/list"]
+    等待    //a[@onclick="add()"]
+    click link    //a[@onclick="add()"]
+    等待    //input[@name="institutionType"][1]
+    Select Radio Button    institutionType    1    #选择测试机构
+    Select Radio Button    first_flag    1    #选择阶梯计费规则
+    Select Radio Button    wy_opt    business_wy_close    #选择为普通机构
+    Select From List    //*[@name="managers[0].manageId"]    高凯林
+    Select From List    //*[@name="provinceId"]    北京市
+    sleep    2
+    Select From List    //*[@name="cityId"]    市辖区
+    sleep    2
+    Select From List    //*[@name="areaIdReal"]    海淀区
+    input text    //*[@name="signStartDate"]    2016-11-28\r\n    #合作有效期
+    input text    //*[@name="signEndDate"]    2017-11-28\r\n
+    input text    //*[@name="signInfo.managerName"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="signInfo.managerPhone"]    ${gl_phone}    #手机号
+    input text    //*[@id="2_tt"]    1    #合同签约价
+    input text    //*[@id="3_tt"]    1
+    input text    //*[@id="4_tt"]    0
+    input text    //*[@id="5_tt"]    0
+    input text    //*[@id="6_tt"]    0
+    input text    //*[@id="7_tt"]    0
+    input text    //*[@id="8_tt"]    0
+    click element    //*[@id="zhuanzhang"]    #选为转账
+    input text    //*[@name="signInfo.payComment"]    我可以免费创建！    #汇款备注
+    input text    //*[@name="contact.name"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="contact.telephone"]    ${gl_phone}
+    input text    //*[@name="contact.homePhone"]    0105958556
+    Select From List    //*[@name="contact.positionCode"]    校长
+    input text    //*[@name="contact.email"]    test@163.com
+    input text    //*[@name="insName"]    ${jgjieti_name}
+    input text    //*[@name="invoice"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="empNumber"]    1000
+    click element    //*[@name="operatingRanges[0].subjectProductId"]    #经营学科范围
+    click element    //*[@ name="subjectVersionIns[0].subjectId"]    #意向学科&教材
+    sleep    1
+    Select From List    //select[@name="subjectVersionIns[0].bookVersions[0].id"]    全国版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[1].id"]    北师版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[2].id"]    沪教版
+    sleep    1
+    click element    //input[@value="22-11"]
+    click element    //input[@class="ok" and @type="button"]
+    sleep    2
+    click button    //button[@value="ok"]
+    浏览器提示框确认
+
+axx_创建机构_集团
+    [Documentation]    签约金额异常
+    等待    //a[@class="first sale"]    #进入销售管理
+    click link    //a[@class="first sale"]
+    等待    //a[@href="/institution/list"]    #进入客户管理
+    click link    //a[@href="/institution/list"]
+    等待    //a[@onclick="add()"]
+    click link    //a[@onclick="add()"]
+    等待    //input[@name="institutionType"][1]
+    Select Radio Button    institutionType    1    #选择测试机构
+    Select Radio Button    first_flag    2    #选择阶梯计费规则
+    Select Radio Button    wy_opt    business_wy_close    #选择为普通机构
+    Select From List    //*[@name="managers[0].manageId"]    高凯林
+    Select From List    //*[@name="provinceId"]    北京市
+    sleep    2
+    Select From List    //*[@name="cityId"]    市辖区
+    sleep    2
+    Select From List    //*[@name="areaIdReal"]    海淀区
+    input text    //*[@name="signStartDate"]    2016-11-28\r\n    #合作有效期
+    input text    //*[@name="signEndDate"]    2017-11-28\r\n
+    input text    //*[@name="signInfo.managerName"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="signInfo.managerPhone"]    ${gl_phone}    #手机号
+    Comment    input text    //*[@id="2_tt"]    1    #集团用户无合同签约价
+    Comment    input text    //*[@id="3_tt"]    1
+    Comment    input text    //*[@id="4_tt"]    0
+    Comment    input text    //*[@id="5_tt"]    0
+    Comment    input text    //*[@id="6_tt"]    0
+    Comment    input text    //*[@id="7_tt"]    0
+    Comment    input text    //*[@id="8_tt"]    0
+    click element    //*[@id="zhuanzhang"]    #选为转账
+    input text    //*[@name="signInfo.payComment"]    我可以免费创建！    #汇款备注
+    input text    //*[@name="contact.name"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="contact.telephone"]    ${gl_phone}
+    input text    //*[@name="contact.homePhone"]    0105958556
+    Select From List    //*[@name="contact.positionCode"]    校长
+    input text    //*[@name="contact.email"]    test@163.com
+    input text    //*[@name="insName"]    ${jgjituan_name}
+    input text    //*[@name="invoice"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="empNumber"]    1000
+    click element    //*[@name="operatingRanges[0].subjectProductId"]    #经营学科范围
+    click element    //*[@ name="subjectVersionIns[0].subjectId"]    #意向学科&教材
+    sleep    1
+    Select From List    //select[@name="subjectVersionIns[0].bookVersions[0].id"]    全国版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[1].id"]    北师版
+    sleep    1
+    Select From List    //*[@name="subjectVersionIns[0].bookVersions[2].id"]    沪教版
+    sleep    1
+    click element    //input[@value="22-11"]
+    click element    //input[@class="ok" and @type="button"]
+    sleep    2
+    click button    //button[@value="ok"]
+    浏览器提示框确认
+
+axx_创建机构_外研
+    [Documentation]    签约金额异常
+    等待    //a[@class="first sale"]    #进入销售管理
+    click link    //a[@class="first sale"]
+    等待    //a[@href="/institution/list"]    #进入客户管理
+    click link    //a[@href="/institution/list"]
+    等待    //a[@onclick="add()"]
+    click link    //a[@onclick="add()"]
+    等待    //input[@name="institutionType"][1]
+    Select Radio Button    institutionType    1    #选择测试机构
+    Comment    Select Radio Button    first_flag    2    #选择阶梯计费规则
+    Select Radio Button    wy_opt    business_wy_open    #选择外研就默认为阶梯计费
+    Select From List    //*[@name="managers[0].manageId"]    高凯林
+    Select From List    //*[@name="provinceId"]    北京市
+    sleep    2
+    Select From List    //*[@name="cityId"]    市辖区
+    sleep    2
+    Select From List    //*[@name="areaIdReal"]    海淀区
+    input text    //*[@name="signStartDate"]    2016-11-28\r\n    #合作有效期
+    input text    //*[@name="signEndDate"]    2017-11-28\r\n
+    input text    //*[@name="signInfo.managerName"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="signInfo.managerPhone"]    ${gl_phone}    #手机号
+    input text    //*[@id="2_tt"]    1    #合同签约价
+    input text    //*[@id="3_tt"]    1
+    input text    //*[@id="4_tt"]    0
+    input text    //*[@id="5_tt"]    0
+    input text    //*[@id="6_tt"]    0
+    input text    //*[@id="7_tt"]    0
+    input text    //*[@id="8_tt"]    0
+    click element    //*[@id="zhuanzhang"]    #选为转账
+    input text    //*[@name="signInfo.payComment"]    我可以免费创建！    #汇款备注
+    input text    //*[@name="contact.name"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="contact.telephone"]    ${gl_phone}
+    input text    //*[@name="contact.homePhone"]    0105958556
+    Select From List    //*[@name="contact.positionCode"]    校长
+    input text    //*[@name="contact.email"]    test@163.com
+    input text    //*[@name="insName"]    ${jgjituan_name}
+    input text    //*[@name="invoice"]    ${qianzhui}自动化管理员${houzhui}
+    input text    //*[@name="empNumber"]    1000
+    click element    //*[@name="operatingRanges[0].subjectProductId"]    #经营学科范围
+    Comment    click element    //*[@ name="subjectVersionIns[0].subjectId"]    #意向学科&教材
+    Comment    sleep    1
+    Comment    Select From List    //select[@name="subjectVersionIns[0].bookVersions[0].id"]    全国版
+    Comment    sleep    1
+    Comment    Select From List    //*[@name="subjectVersionIns[0].bookVersions[1].id"]    北师版
+    Comment    sleep    1
+    Comment    Select From List    //*[@name="subjectVersionIns[0].bookVersions[2].id"]    沪教版
+    Comment    sleep    1
+    Comment    click element    //input[@value="22-11"]
+    click element    //input[@class="ok" and @type="button"]
+    sleep    2
+    click button    //button[@value="ok"]
+    浏览器提示框确认
+
+axx_教师登录
+    axx_打开前台页面
+    等待    id=username
+    input text    id=username    ${qtuser}
+    input text    id=password    123456
+    click element    id=submit
+
+axx_教师授课
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    等待    //li[@class="currentLesson"]
+    click element    //li[@class="currentLesson"]
+    Select Window    new
+    click element    //div[@class="quanping-content"]
+    click element    id=kejian
+    sleep    2
+    Log To Console    he1
+    Select Frame    tag=iframe    0
+    Log To Console    he2
+    Comment    Select Frame    //*[@id="moduleId"]/div[3]/div[1]/iframe[1]
+    click element    //button[contains(text(),'下一页')]
+    click element    //li[@class="btn homework changePic js-leftbtn"]
+    click element    //ul[@class="addnow_tit"]/li[2]
+    click element    //ul[@class="addnow_tit"]/li[3]
+    sleep    5
+    click element    id=questionBtn
+    sleep    12
+    click element    //span[@class="score score1"]
+    click link    id=change
+    sleep    5
+    click element    //span[@class="score score3"]
+    click link    id=closeQuestion
+    sleep    5
+    click element    id=addScores
+    click element    //div[@class="jf_students"]/ul/li[2]
+    sleep    5
+    click element    //a[@class="jiajifenClose"]
+    sleep    5
+    click element    id=integralBtn
+    sleep    5
+    click element    //a[@class="rankingClose"]
+    sleep    3
+    click element    //li[@class="goback"]/a
+    sleep    5
+    Comment    click element    //span[@class="sameheader-username"]
+    Comment    click element    //a[contains(text(),'退出')]
+
+axx_校长登录
+    axx_打开前台页面
+    input text    id=username    ${gl_phone}
+    input text    id=password    123456
+    click element    id=submit
+    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    click element    id=xuexiao
+
+axx_班级管理-创建班级
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    sleep    5
+    click link    //a[@href="/index.php/orgclass/index"]
+    sleep    5
+    等待    //a[@data-href="/index.php/orgclass/create"]
+    click link    //a[@data-href="/index.php/orgclass/create"]
+    等待    //*[@id="subjectList"]
+    Select From List    //*[@id="subjectList"]    小学数学
+    sleep    1
+    Select From List    //*[@id="gradeList"]    一年级
+    sleep    1
+    Select From List    //*[@id="classTypeList"]    高斯数学一年级培优体系（2课时）
+    sleep    1
+    click element    //div[@id="periodList"]/div[2]
+    click element    //p[@class="addTeacherTitle"]
+    sleep    1
+    click element    //dd[@data-teachername="shw老师${houzhui}"]
+    Comment    click element    //p[@class="addTeacherTitle"]
+    Comment    sleep    1
+    Comment    click element    //dd[@data-teachername="黄杰"]
+    click element    //div[@class="week2"]/div[1]
+    Select From List    //select[@class="week_s teachingTimeCode"]    六期
+    Select From List    //select[@class="week week_cur2 beginTimeHour"]    08
+    Select From List    //select[@class="week \ beginTimeMinute"]    00
+    Select From List    //select[@class="week endTimeHour"]    20
+    Select From List    //select[@class="week endTimeMinute"]    00
+    Comment    click element    //div[@class="week2"]/div[3]
+    Comment    Select From List    //span[contains(text(),'周一')]/following-sibling::select[1]    07
+    Comment    Select From List    //span[contains(text(),'周一')]/following-sibling::select[1]    07
+    Comment    Select From List    //span[contains(text(),'周一')]/following-sibling::select[2]    00
+    Comment    Select From List    //span[contains(text(),'周一')]/following-sibling::select[3]    12
+    Comment    Select From List    //span[contains(text(),'周一')]/following-sibling::select[4]    12
+    input text    //*[@id="startDate"]    2016-11-28\r
+    input text    //*[@id="endDate"]    2017-05-01\r
+    input text    //*[@name="className"]    ${bj_name}
+    Select From List    //*[@id="campusList"]    总校区
+    Comment    input text    //*[@name="originalClassCode"]
+    click element    //*[@id="saveOrgClass"]
+
+axx_学员管理-录入学员
+    [Arguments]    ${xs_phone}    ${xshouzhui}
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="/index.php/student/index"]
+    等待    //a[@data-href="/index.php/student/add"]
+    click link    //a[@data-href="/index.php/student/add"]
+    等待    //input[@name="truthName"]
+    input text    //input[@name="truthName"]    ${qianzhui}学员${xshouzhui}
+    Select From List    //select[@name="grade"]    三年级
+    input text    //input[@name="parentTel1"]    ${xs_phone}
+    Select From List    //select[@name="parent1ref"]    父亲
+    Comment    click element    //a[@class="blueText addParents"]
+    Comment    input text    //input[@name="parentTel2"]    15311100${houzhui}
+    Comment    Select From List    //select[@name="parent2ref"]    母亲
+    click element    //a[contains(text(),'添加班级')]
+    等待    id=searchClassInput
+    input text    id=searchClassInput    ${bj_name}
+    click element    //a[contains(text(),'搜索')]
+    sleep    2
+    click element    //div[@class="cons classListShows"]/ul[1]/li[1]/em
+    click element    //button[@class="aui_state_highlight"]
+    Comment    click element    //span[@class="name name2 toblue j-showMore"]
+    Comment    input text    //input[@name="schoolCode"]    000${houzhui}
+    Comment    click element    //li[@class="posr cf more"]/label[1]
+    Comment    Select From List    //select[@class="fl yearSelect"]    2000
+    Comment    Select From List    //select[@class="fl monthSelect"]    01
+    Comment    input text    //input[@name="school"]    测试小学
+    click element    //input[@class="lr yh submitDiv"]
+    sleep    2
+
+axx_账号管理-新建账号（教师）
+    [Documentation]    存在就点击功能不可用
+    存在就点击    //a[@id="saveCampus"][2]
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    存在就点击    //div[@class="clos_ioc"]
+    存在就点击    //div[@class="btn-close-guide dialog-close"]
+    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    click link    //a[@href="/index.php/user/index"]
+    等待    //a[@href="/index.php/user/add"]
+    click link    //a[@href="/index.php/user/add"]
+    等待    //input[@id="realName"]
+    input text    //input[@id="realName"]    ${ls_name}
+    input text    //input[@id="telephone"]    ${ls_phone}
+    click element    //div[@class="dian1 x1 newCheckbox teacher"]
+    sleep    1
+    click element    //div[contains(text(),'女')]
+    click element    //div[contains(text(),'数学')]
+    sleep    2
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[2]/div/div[1]/div[2]/div[2]/div/div[1]
+    sleep    5
+    ${res}    Run Keyword and return status    Page Should Contain    //a[@id="saveCampus"][2]
+    Run Keyword If    ${res}    click element    //a[@id="saveCampus"][2]
+    input text    //input[@name="nickname"]    ${qianzhui}宣传教师${houzhui}
+    click element    //div[contains(text(),'全职')]
+    click element    //*[@id="addUser"]
+    click button    //button[@class="aui_state_highlight"]
+
+axx_新建课程
+    [Documentation]    添加考区；
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]
+    等待    //a[@class="comBtn fl"]
+    click link    //a[@class="comBtn fl"]
+    等待    //select[@name="subjectProductId"]
+    Select From List    //select[@name="subjectProductId"]    小学语文
+    sleep    1
+    Select From List    //select[@name="jiaocai"]    全国版
+    sleep    1
+    Select From List    //select[@name="examArea.id"]    北京
+    click element    //ul[@id="schemes"]/li[2]
+    click element    //ul[@id="time"]/li[1]
+    click element    //ul[@id="type"]/li
+    input text    //input[@class="input rounded"]    ${qianzhui}自动化测试语文${houzhui}
+    click element    //input[@id="submitButton"]
+    等待    //button[contains(text(),'返回课程列表')]
+    click button    //button[contains(text(),'返回课程列表')]
+
+axx_添加班型
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]
+    等待    //a[@href="/u/classTypes"]
+    click link    //a[@href="/u/classTypes"]
+    等待    //a[@class="comBtn fl"]
+    click link    //a[@class="comBtn fl"]
+    sleep    2
+    Select Frame    id=jbox-iframe
+    Select Radio Button    type    0
+    Select Radio Button    content    1
+    input text    //input[@name="code"]    ${qianzhui}zdhcsbx${houzhui}
+    input text    //input[@name="name"]    ${qianzhui}自动化测试班型${houzhui}
+    Select From List    //select[@id="subjectProductId"]    小学语文
+    sleep    1
+    Select From List    //select[@id="grade"]    二年级
+    sleep    1
+    Select From List    //select[@id="courseId"]    ${qianzhui}自动化测试语文${houzhui}
+    Select From List    //td[contains(text(),'学期：')]/following-sibling::td/select[3]    2
+    Select From List    //td[contains(text(),'学期：')]/following-sibling::td/select[4]    2
+    click element    //input[@id="submitButton"]
+
+glzx_内容管理-课节管理
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]
+    等待    //a[@href="/content/lessonManage"]
+    click link    //a[@href="/content/lessonManage"]
+    等待    //a[contains(text(),'小学语文')]
+    click element    //a[contains(text(),'小学语文')]
+    等待    //a[@onclick="setValue('grade','3',this)"]
+    click element    //a[@onclick="setValue('grade','3',this)"]
+    等待    //a[@onclick="setValue('status','1',this)"]
+    click element    //a[@onclick="setValue('status','1',this)"]
+    等待    //a[contains(text(),'管理课节')][1]
+    click element    //a[contains(text(),'管理课节')][1]
+    Select Window    new
+    等待    //tr[@class="even"]/td[4]/span[2]/a
+    click element    //tr[@class="even"]/td[4]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    GSSX02S0104有趣的乘法1 (Web).zip
+    click element    //input[@onclick="checkForm();"]
+    sleep    60
+    等待    //input[@value="确定"]
+    click element    //input[@value="确定"]
+    Comment    Unselect Frame
+    Comment    等待    id=jbox-iframe
+    Comment    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //tr[@class="even"]/td[5]/span[2]/a
+    click element    //tr[@class="even"]/td[5]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    【小视频】1.mp4
+    click element    //input[@onclick="checkForm();"]
+    sleep    30
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //tr[@class="even"]/td[6]/span[2]/a
+    click element    //tr[@class="even"]/td[6]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    思高英语·中学学科介绍.mp4
+    click element    //input[@onclick="checkForm();"]
+    sleep    30
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //tr[@class="even"]/td[7]/span[2]/a
+    click element    //tr[@class="even"]/td[7]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    1.pdf
+    click element    //input[@onclick="checkForm();"]
+    sleep    30
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //*[@id="manage"]/table/tbody/tr[3]/td[4]/span[2]/a
+    click element    //*[@id="manage"]/table/tbody/tr[3]/td[4]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    实数-平方根.zip
+    click element    //input[@onclick="checkForm();"]
+    sleep    30
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //*[@id="manage"]/table/tbody/tr[3]/td[5]/span[2]/a
+    click element    //*[@id="manage"]/table/tbody/tr[3]/td[5]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    GSSX02S0015列表推理备课视频.mp4
+    click element    //input[@onclick="checkForm();"]
+    sleep    40
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //*[@id="manage"]/table/tbody/tr[3]/td[6]/span[2]/a
+    click element    //*[@id="manage"]/table/tbody/tr[3]/td[6]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    11.mp4
+    click element    //input[@onclick="checkForm();"]
+    sleep    30
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //*[@id="manage"]/table/tbody/tr[3]/td[7]/span[2]/a
+    click element    //*[@id="manage"]/table/tbody/tr[3]/td[7]/span[2]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn edit"]
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    等待    //input[@value="七牛上传"]
+    click element    //input[@value="七牛上传"]
+    文件上传-gc    7.pdf
+    click element    //input[@onclick="checkForm();"]
+    sleep    20
+    Unselect Frame
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    click element    //input[@class="editVideoBtn sure fr"]
+    等待    //form[@name="manage"]/table/tbody/tr[2]/td[8]/div/span[1]/a
+    click element    //form[@name="manage"]/table/tbody/tr[2]/td[8]/div/span[1]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    input text    //input[@name="lessonName"]    shw自动化测试课节1
+    input text    //input[@name="time"]    45
+    click element    //input[@onclick="submitForm();"]
+    sleep    10
+    Unselect Frame
+    等待    //form[@name="manage"]/table/tbody/tr[3]/td[8]/div/span[1]/a
+    click element    //form[@name="manage"]/table/tbody/tr[3]/td[8]/div/span[1]/a
+    等待    id=jbox-iframe
+    Select Frame    id=jbox-iframe
+    input text    //input[@name="lessonName"]    shw自动化测试课节2
+    input text    //input[@name="time"]    45
+    click element    //input[@onclick="submitForm();"]
+
+glzx_新建课程-课程发布
+    等待    //a[@href="javaScript:location.reload()"]
+    click link    //a[@href="javaScript:location.reload()"]
+    等待    //*[contains(text(),'${qianzhui}自动化测试语文${houzhui}')]/following-sibling::td[1]/table/tbody/tr[2]/td[3]/a
+    click element    //*[contains(text(),'${qianzhui}自动化测试语文${houzhui}')]/following-sibling::td[1]/table/tbody/tr[2]/td[3]/a
+    等待    //button[@class="jbox-button jbox-button-focus"]
+    click button    //button[@class="jbox-button jbox-button-focus"]
+    等待    //*[contains(text(),'${qianzhui}自动化测试语文${houzhui}')]/following-sibling::td[1]/table/tbody/tr[3]/td[3]/a
+    click element    //*[contains(text(),'${qianzhui}自动化测试语文${houzhui}')]/following-sibling::td[1]/table/tbody/tr[3]/td[3]/a
+    等待    //button[@class="jbox-button jbox-button-focus"]
+    click button    //button[@class="jbox-button jbox-button-focus"]
+
+axx_教师授课（1）
+    click element    id=shouke
+    click element    //div[@class="menuList grade clear"]/ul/li[2]
+    click element    //div[@class="one active"]
+    sleep    5
+    click element    //tbody[@id="lessonList"]/tr[2]
+    等待    //li[@class="currentLesson"]
+    click element    //li[@class="currentLesson"]
+    Select Window    new
+    click element    //div[@class="quanping-content"]
+    click element    id=kejian
+    sleep    2
+    click button    //button[contains(text(),'下一页')]
+    click element    //li[@class="btn homework changePic js-leftbtn"]
+    click element    //ul[@class="addnow_tit"]/li[2]
+    click element    //ul[@class="addnow_tit"]/li[3]
+    sleep    5
+    click element    id=questionBtn
+    sleep    12
+    click element    //span[@class="score score1"]
+    click link    id=change
+    sleep    5
+    click element    //span[@class="score score3"]
+    click link    id=closeQuestion
+    sleep    5
+    click element    id=addScores
+    click element    //div[@class="jf_students"]/ul/li[2]
+    sleep    5
+    click element    //a[@class="jiajifenClose"]
+    sleep    5
+    click element    id=integralBtn
+    sleep    5
+    click element    //a[@class="rankingClose"]
+    sleep    3
+    click element    //li[@class="goback"]/a
+    sleep    5
+    Comment    click element    //span[@class="sameheader-username"]
+    Comment    click element    //a[contains(text(),'退出')]
+
+axx_前台在线签约
+    [Documentation]    查询数据库有问题，后续待解决，目前设置延迟20s自己查询数据库
+    axx_打开前台页面
+    等待    //a[@class="nav-a qianyue"]
+    click element    //a[@class="nav-a qianyue"]
+    等待    //a[@class="yes_reach"]
+    click element    //a[@class="yes_reach"]
+    等待    //input[@id="telephone"]
+    input text    //input[@id="telephone"]    ${gl_phone}
+    Comment    : FOR    ${i}    IN RANGE    1000
+    Comment    \    click element    //img[@id="safeCodeImage"]
+    Comment    \    sleep    1
+    Comment    \    ${url}    Get Element Attribute    //img[@id="safeCodeImage"]@src
+    Comment    \    ${tmp}    Get Cookies
+    Comment    \    log    ${tmp}
+    Comment    \    ${tmp}    shibieCookies    ${tmp}    ${url}
+    Comment    \    input text    id=safeCode    ${tmp}
+    Comment    \    click element    //input[@value="获取验证码"]
+    Comment    \    ${res}    Run Keyword and return status    Page Should Contain    ${jg_name}
+    Comment    \    Exit For Loop If    ${res}
+    ${tmp}    Get Tishi    请输入图片验证码
+    input text    id=safeCode    ${tmp}
+    click element    //input[@value="获取验证码"]
+    sleep    20
+    Comment    ${tmp}    axx_查询验证码    ${gl_phone}
+    Comment    ${tmp}    Get Mysql Item    SELECT * FROM `notify_record` WHERE contact='${gl_phone}' ORDER BY add_time DESC;    content
+    Comment    input text    id=validateCode    ${tmp}
+    click element    //input[@value="下一步"]
+    等待    //input[@value="我同意该协议>"]
+    click element    //input[@value="我同意该协议>"]
+    等待    //div[contains(text(),'银行转账')]
+    click element    //div[contains(text(),'银行转账')]
+    click element    //button[contains(text(),'发送转账信息到手机')]
+    浏览器提示框确认
+    close browser
+
+axx_转正审批
+    等待    //a[@href="/recharge/list"]
+    click link    //a[@href="/recharge/list"]
+    等待    //a[@href="/tofull/list"]
+    click link    //a[@href="/tofull/list"]
+    等待    //td[contains(text(),'${jg_name}')]/following-sibling::td[7]/div/span/a
+    click element    //td[contains(text(),'${jg_name}')]/following-sibling::td[7]/div/span/a
+    等待    //select[@name="operatingCharge"]
+    Select From List    //select[@name="operatingCharge"]    王京
+    Comment    click element    //input[@type="button"]
+    Comment    click button    //button[@class="jbox-button jbox-button-focus"]
+    click button    //input[@value="通过"]
+    sleep    1
+    click button    //button[@class="jbox-button jbox-button-focus"]
+
+axx_机构上传证件
+    等待    //a[@class="first agency"]
+    click link    //a[@class="first agency"]
+    等待    //select[@name="institutionType"]
+    Select From List    //select[@name="institutionType"]    测试机构
+    click element    //input[@type="submit"]
+    等待    //td[@title="集团签约"]/following-sibling::td[11]/div/span[3]/a
+    click element    //td[@title="集团签约"]/following-sibling::td[11]/div/span[3]/a
+    sleep    2
+    click element    //input[@name="legalPersonIdCard"]
+    文件上传-gc    shenfenzheng.jpg
+    sleep    2
+    click element    //input[@name="businessLicense"]
+    文件上传-gc    shenfenzheng.jpg
+    sleep    2
+    click element    //input[@name="schoolLicense"]
+    文件上传-gc    shenfenzheng.jpg
+    Comment    ${tmp}    Get Home DIR    shenfenzheng.jpg
+    Comment    choose file    //input[@name="legalPersonIdCard"]    ${tmp}
+    Comment    sleep    1
+    Comment    ${tmp}    Get Home DIR    shenfenzheng.jpg
+    Comment    choose file    //input[@name="businessLicense"]    ${tmp}
+    Comment    sleep    1
+    Comment    ${tmp}    Get Home DIR    shenfenzheng.jpg
+    Comment    choose file    //input[@name="schoolLicense"]    ${tmp}
+    sleep    2
+    click element    //input[@onclick="submitForm();"]
+
+axx_测评（预览、下载）
+    等待    id=ceping
+    click element    id=ceping
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    等待    //a[@data-periodid="WINTER_SPRING"]
+    click element    //a[@data-periodid="WINTER_SPRING"]
+    sleep    1
+    click element    //div[@class="subjectList"]/a[2]
+    sleep    1
+    click element    //div[@class="groupList"]/a[2]
+    click element    //div[@class="gradeList"]/a[2]
+    sleep    1
+    click element    //a[@class="yulan"]
+    sleep    5
+    click element    //div[@id="dialogClose"]/img
+    click element    //a[@class="xiazai"]
+
+axx_前台登录
+    axx_打开前台页面
+    input text    id=username    ${qtuser}
+    input text    id=password    123456
+    click element    id=submit
+    Comment    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    Comment    存在就点击    //div[@class="btn-close-guide J-btn-close-guide"]
+    Comment    click element    id=xuexiao
+
+axx_测评（录入、报告预览）
+    等待    id=ceping
+    click element    id=ceping
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    等待    //a[@data-periodid="WINTER_SPRING"]
+    click element    //a[@data-periodid="WINTER_SPRING"]
+    sleep    1
+    click element    //div[@class="subjectList"]/a[2]
+    sleep    1
+    click element    //div[@class="groupList"]/a[2]
+    click element    //div[@class="gradeList"]/a[2]
+    sleep    1
+    click element    //a[@class="luru"]
+    sleep    2
+    input text    //input[@name="studentName"]    厉害的呢
+    input text    //input[@name="phone"]    17300000020
+    click element    //a[contains(text(),'母')]
+    click element    //ul[@class="std_ed"]/li[1]/div/a[1]
+    click element    //ul[@class="std_ed"]/li[2]/div/a[4]
+    click element    //ul[@class="std_ed"]/li[3]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[4]/div/input    13
+    input text    //ul[@class="std_ed"]/li[5]/div/input    3
+    click element    //ul[@class="std_ed"]/li[6]/div/a[3]
+    click element    //ul[@class="std_ed"]/li[7]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[8]/div/input    11
+    click element    //ul[@class="std_ed"]/li[9]/div/a[3]
+    input text    //ul[@class="std_ed"]/li[10]/div/input    3
+    click element    //input[@id="saveAnswer"]
+    sleep    5
+    click element    //a[@id="downloadReport"]
+    等待    //div[@id="dialogClose"]/img
+    click element    //div[@id="dialogClose"]/img
+    click element    //a[@href="/report/index"]
+    等待    //span[@class="editRemark"]
+    click element    //span[@class="editRemark"]
+    input text    //textarea    ${houzhui}
+    click element    //input[@class="qt_baocun saveRemark"]
+    sleep    2
+    click element    //ul[@class="qt_home1_icon"]/li[5]/a
+    等待    //button[@class="aui_state_highlight"]
+    click element    //button[@class="aui_state_highlight"]
+
+axx_header按钮点击
+    [Documentation]    20行需要修改
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="http://bk.aixuexi.com"]
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="http://ke.aixuexi.com"]
+    等待    //a[@class="chaungjian"]
+    click element    //a[@class="chaungjian"]
+    等待    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //div[contains(text(),'男')]
+    click element    //div[contains(text(),'数学')]
+    sleep    1
+    click element    //span[contains(text(),'小学')]/following-sibling::div/div[1]
+    input text    //input[@name="nickname"]    校长亲自授课${houzhui}
+    click element    //div[@class="add_teach"]/div[5]/div/div[1]
+    click element    //a[@id="saveEdit"]
+    sleep    2
+    click element    //button[@class="aui_state_highlight"]
+    sleep    2
+    click element    //a[@href="http://ke.aixuexi.com"]
+    sleep    5
+    click element    //a[@href="http://front.aixuexi.com"]
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click element    //a[@href="http://px.aixuexi.com"]
+    Comment    等待    //a[@class="btn btn-green signUp"]
+    Comment    click element    //a[@class="btn btn-green signUp"]
+    Comment    sleep    5
+    Comment    click element    //a[@class="gray cancelSign"]
+    Comment    sleep    1
+    等待    //a[@href="/reviewCourse?page=1"]
+    click element    //a[@href="/reviewCourse?page=1"]
+    等待    //div[@class="courseList"]/ul/li[1]/div[3]/a
+    click element    //div[@class="courseList"]/ul/li[1]/div[3]/a
+    Select Window    new
+    sleep    10
+    close window
+    Select Window
+    click link    //a[@class="homework"]
+    等待    //a[contains(text(),'查看近期课程')]
+    click element    //a[contains(text(),'查看近期课程')]
+    sleep    2
+    click element    //div[@class="message-title"]
+    sleep    2
+    click element    //div[@class="message-title"]
+
+axx_前台_基础设置
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="/index.php/version/index"]
+    等待    //a[@class="hetong"]
+    click element    //a[@class="hetong"]
+    等待    //a[@class="hetong-close"]
+    click element    //a[@class="hetong-close"]
+    click element    //td[contains(text(),'初中数学')]/following-sibling::td[2]/a
+    等待    //div[contains(text(),'北师版')]
+    click element    //div[contains(text(),'北师版')]
+    click element    //a[@id="saveCampus"]
+    sleep    5
+    click element    //a[@href="/index.php/campus/index"]
+    等待    //a[@class="cxiaoqu"]
+    click element    //a[@class="cxiaoqu"]
+    等待    //input[@class="ipt_active newInput"]
+    input text    //input[@class="ipt_active newInput"]    校区${houzhui}
+    click element    //a[@id="saveCampus"]
+    sleep    5
+    click element    //*[@id="moduleId"]/div[8]/div[1]/ul[2]/li[1]/div[2]/a[2]
+    等待    //button[contains(text(),'确定')]
+    click element    //button[contains(text(),'确定')]
+    sleep    5
+    click element    //a[@href="/index.php/classtype/index"]
+    等待    //select[@name="grade"]
+    Select From List    //select[@name="grade"]    三年级
+    click element    //input[@class="submits comGreenBtn-small yh fl"]
+    等待    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    input text    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[2]/input    班型${houzhui}
+    click element    //a[@typecode="GSXS0301"]
+    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/following-sibling::li[3]/div/ul[2]/li[3]/a
+    Select Window    new
+    sleep    10
+    close window
+    Select Window
+    click element    //a[@href="/index.php/basis/index"]
+
+axx_前台_购买教材
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click link    //a[@href="/index.php/shop/index"]
+    等待    //a[@href="/index.php/shop/index?sid=22"]
+    click element    //a[@href="/index.php/shop/index?sid=22"]
+    等待    //a[@href="/index.php/shop/index?sid=13"]
+    click element    //a[@href="/index.php/shop/index?sid=13"]
+    等待    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/p
+    click element    //div[@class="fl shopping_wrap_l"]/div[1]/div[2]/p
+    等待    //td[contains(text(),'一年级下册')]//following-sibling::td[2]/input
+    input text    //td[contains(text(),'一年级下册')]//following-sibling::td[2]/input    1
+    input text    //td[contains(text(),'二年级下册')]//following-sibling::td[2]/input    1
+    input text    //td[contains(text(),'三年级下册')]//following-sibling::td[2]/input    1
+    input text    //td[contains(text(),'四年级下册')]//following-sibling::td[2]/input    10
+    input text    //td[contains(text(),'五年级下册')]//following-sibling::td[2]/input    10
+    input text    //td[contains(text(),'六年级下册')]//following-sibling::td[2]/input    10
+    click element    //a[@class="fr add_cart_btn js-addCart"]
+    click element    //a[@id="gotoSettlement"]
+    sleep    5
+    click element    //*[@id="moduleId"]/div[8]/div[1]/ul[2]/li[1]/div[2]/a[2]
+    等待    //button[contains(text(),'确定')]
+    click element    //button[contains(text(),'确定')]
+    sleep    5
+    click element    //a[@href="/index.php/classtype/index"]
+    等待    //select[@name="grade"]
+    Select From List    //select[@name="grade"]    三年级
+    click element    //input[@class="submits comGreenBtn-small yh fl"]
+    等待    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[1]/a
+    input text    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/preceding-sibling::li[1]/div/div[2]/input    班型${houzhui}
+    click element    //a[@typecode="GSXS0301"]
+    click element    //li[contains(text(),'高斯数学三年级培优体系（2课时）')]/following-sibling::li[3]/div/ul[2]/li[3]/a
+    Select Window    new
+    sleep    10
+    close window
+    Select Window
+    click element    //a[@href="/index.php/basis/index"]
+
+axx_newbeike登录
+    axx_打开前台页面
+    等待    id=username
+    input text    id=username    ${qyjphone}
+    input text    id=password    123456
+    click element    id=submit
+    sleep    5
+    go to    http://newbeike.aixuexi.com/
+
+axx_newbeike教师备课
+    [Documentation]    为什么在同一个frame里面点位不到元素额 20-23
+    4
+    Comment    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    sleep    2
+    click element    //ul[@class="subjectList"]/li[1]/a
+    sleep    2
+    click element    //dd[@class="gradeList"]/a[3]
+    sleep    2
+    click element    //dd[@class="periodList"]/a[2]
+    sleep    2
+    click element    //div[@class="classType english"]/ul/li[3]/a
+    sleep    2
+    click element    //div[@class="left"]/ul/li[3]/a
+    Select Window    new
+    等待    //div[@class="kejian"]/iframe
+    select frame    //div[@class="kejian"]/iframe
+    sleep    5
+    click button    //button[@class="component_base std play"]
+    sleep    5
+    Comment    click button    //button[@class="component_base next"]
+    Comment    sleep    5
+    Comment    click button    //button[@class="component_container prev"]
+    Comment    sleep    2
+    unselect frame
+    click link    //a[@class="beike"]
+    sleep    10
+    click link    //ul[@class="subUl"]/li[1]/a
+    sleep    10
+    close window
+    Select Window
+    Comment    click element    //span[@class="sameheader-username"]
+    Comment    click element    //a[contains(text(),'退出')]
+
+diy_登录
+    diy_打开页面
+    input text    //input[@type="text"]    ${diyuser}
+    input text    //input[@type="password"]    ${diypwd}
+    click button    //button[@type="submit"]
+
+diy_知识点题模创建
+    [Documentation]    流程是创建文件夹后再创建下属文件夹，添加知识点，添加题模；检查题模是否存在，检查编辑题模是否会自带原知识点。///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ...    \ \ \ \ \ \ \ \ \
+    ...
+    ...    1.中间少新建文件夹和知识点；2.主要维护的点为新增题模选择知识点，因为该知识点框架与之前左侧树状一样，测试环境与线上不一样，后使用xpath语法descendant解决。
+    等待    //li[contains(text(),'知识点&题模')]
+    click element    //li[contains(text(),'知识点&题模')]
+    等待    //button[@type="button"]    #创建第一个题模
+    click button    //button[@type="button"]
+    等待    //input[@type="text"]
+    input text    //input[@type="text"]    ${timu1}
+    click element    //a[@id="knowledgeId"]
+    Comment    等待    //span[@class="gaosi-tree-title"]
+    Comment    click element    //span[@class="gaosi-tree-title"]
+    sleep    2
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${wenjianjia1}"]/span[2]    #选择窗口选择第一层文件夹
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${wenjianjia2}"]/span[2]    #第二层文件夹
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${zhishidian}"]/span[2]    #知识点
+    等待    //div[@class="ant-modal-footer"]/button[2]
+    click element    //div[@class="ant-modal-footer"]/button[2]
+    sleep    2
+    click element    //a[@title="${wenjianjia1}"]/span[2]    #主页面左侧树状栏
+    click element    //a[@title="${wenjianjia2}"]/span[2]
+    click element    //a[@title="${zhishidian}"]/span[2]
+    sleep    2
+    page should contain element    //td[contains(text(),'${timu1}')]    \    \    #页面需要包含创建的题模
+    click element    //td[contains(text(),'${timu1}')]/following-sibling::td[3]/a[1]    #点击题模编辑
+    sleep    1
+    page should contain element    //a[@id="knowledgeId"and@data-__meta="[object Object]"]    \    \    #窗口是否自带知识点
+    click element    //div[@class="ant-modal-footer"]/button[2]    #点击确定返回
+    等待    //button[@type="button"]    #创建第二个题模
+    click button    //button[@type="button"]
+    等待    //input[@type="text"]
+    input text    //input[@type="text"]    ${timu2}
+    click element    //a[@id="knowledgeId"]
+    Comment    等待    //span[@class="gaosi-tree-title"]
+    Comment    click element    //span[@class="gaosi-tree-title"]
+    sleep    2
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${wenjianjia1}"]/span[2]    #选择窗口选择第一层文件夹
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${wenjianjia2}"]/span[2]    #第二层文件夹
+    click element    //div[@class="ant-modal-content"]/descendant::a[@title="${zhishidian}"]/span[2]    #知识点
+    等待    //div[@class="ant-modal-footer"]/button[2]
+    click element    //div[@class="ant-modal-footer"]/button[2]
+
+diy_课件逻辑
+    [Documentation]    目前针对线上，目前注释掉的是个bug，后续要加上，目前课件结构也有问题，编辑界面有问题 ？？？？？？？？？？？？？？？？？？？？？？？还需针对限制条件做编辑
+    等待    //li[contains(text(),'资源库')]
+    click element    //li[contains(text(),'资源库')]
+    等待    //li[contains(text(),'课件')]
+    click element    //li[contains(text(),'课件')]
+    等待    //a[@title="${wenjianjia1}"]/span[2]
+    click element    //a[@title="${wenjianjia1}"]/span[2]    #测试左边知识点树状图能否一键将文件夹合起
+    sleep    1
+    click element    //a[@title="${wenjianjia2}"]/span[2]
+    sleep    1
+    click element    //a[@title="${wenjianjia1}"]/span[2]
+    click element    //button[@type="button"]    #添加课件碎片
+    等待    //a[contains(text(),'${kjlx}')]
+    click element    //a[contains(text(),'${kjlx}')]    #选择课件类型
+    input text    //input[@class="ant-input"]    ${kjsp}    #输入课件碎片名称
+    click element    //div[@class="ant-upload-drag-container"]    #上传课件
+    文件上传-gc    diy课件.pdf
+    sleep    10
+    click element    //a[contains(text(),'请选择')]
+    sleep    2
+    click element    //div[@style="margin: 15px 0px;"]/descendant::a[@title="${wenjianjia1}"]/span[2]    #选择窗口选择第一层文件夹
+    click element    //div[@style="margin: 15px 0px;"]/descendant::a[@title="${wenjianjia2}"]/span[2]    #第二层文件夹
+    click element    //div[@style="margin: 15px 0px;"]/descendant::a[@title="${zhishidian}"]/span[2]    #知识点
+    click element    //html/body/div[5]/descendant::div[@class="ant-modal-footer"]/button[2]
+    sleep    1
+    click element    //div[@class="ant-modal-footer"]/button[2]
+    sleep    2
+    click element    //a[@title="${wenjianjia1}"]/span[2]    #主页面左侧树状栏
+    Comment    click element    //a[@title="${wenjianjia2}"]/span[2]    #之前收缩过，这个应该注释掉
+    click element    //a[@title="${zhishidian}"]/span[2]    #检索该知识点下所属课件
+    sleep    2
+    click element    //td[contains(text(),'${kjsp}')]/following-sibling::td[3]/a[1]    #预览
+    select window    new    #打开新的界面
+    sleep    5
+    close window
+    select window    \    #重新选择该界面
+    click element    //td[contains(text(),'${kjsp}')]/following-sibling::td[3]/a[2]    #编辑
+    Comment    Page should contain element
+
+diy_课件教材基础设置
+    [Documentation]    针对测试环境，暂时线上还有bug
+    等待    //li[contains(text(),'资源库')]
+    click element    //li[contains(text(),'资源库')]
+    等待    //li[contains(text(),'基础设置')]
+    click element    //li[contains(text(),'基础设置')]
+    等待    //button[@type="button"]
+    click element    //button[@type="button"]
+    等待    //input[@id="pieceTypeName"]
+    input text    //input[@id="pieceTypeName"]    ${jclx}
+    click element    //div[@class="ant-modal-footer"]/button[2]    #创建教材碎片成功
+    sleep    2
+    click element    //td[contains(text(),'${jclx}')]/following-sibling::td[3]/a[1]    #编辑该类型
+    等待    //input[@type="text"and@value="${jclx}"]    #等待以及确认编辑窗口是否自带该教材类型名称
+    click element    //div[@class="ant-modal-footer"]/button[2]
+    sleep    2
+    click element    //li[contains(text(),'课件设置')]
+    sleep    2    \    #因为上个界面也存在添加，直接等待可能会错乱，所以使用sleep
+    click element    //button[@type="button"]
+    等待    //input[@id="pieceTypeName"]
+    input text    //input[@id="pieceTypeName"]    ${kjlx}
+    click element    //div[@class="ant-modal-footer"]/button[2]    #创建课件碎片成功
+    sleep    2
+    click element    //td[contains(text(),'${kjlx}')]/following-sibling::td[2]/a[1]    #编辑该类型
+    等待    //input[@type="text"and@value="${kjlx}"]    #等待以及确认编辑窗口是否自带该课件类型名称
+    click element    //div[@class="ant-modal-footer"]/button[2]
+
+diy_题库检索
+    [Documentation]    知识点检索题目现在还有bug \ 中间应该要加page should contain element，目前还没题目，后续优化 缺少所有条件综合搜索
+    等待    //li[contains(text(),'资源库')]
+    click element    //li[contains(text(),'资源库')]
+    等待    //li[contains(text(),'题库')]
+    click element    //li[contains(text(),'题库')]
+    等待    //a[@title="${wenjianjia1}"]/span[2]
+    click element    //a[@title="${wenjianjia1}"]/span[2]    #测试左边知识点树状图能否一键将文件夹合起
+    sleep    1
+    click element    //a[@title="${wenjianjia2}"]/span[2]
+    sleep    1
+    click element    //a[@title="${wenjianjia1}"]/span[2]
+    sleep    1
+    click element    //a[@title="${wenjianjia1}"]/span[2]    #再次展开
+    sleep    1
+    click element    //a[@title="${zhishidian}"]/span[2]
+    sleep    5
+    click element    //div[@class="ant-select-selection__rendered"]
+    sleep    1
+    click element    //a[contains(text(),'${timu1}')]    #检索题模为${timu1}的所有题
+    sleep    5
+    click element    //div[@class="ant-select-selection__rendered"]
+    sleep    1
+    click element    //a[contains(text(),'${timu2}')]    #检索题模为${timu2}的所有题
+    sleep    5
+    click element    //div[@class="ant-select-selection__rendered"]
+    sleep    1
+    click element    //div[@style="overflow: auto;"]/ul/li[1]    #回到全部
+    sleep    2
+    click element    //li[contains(text(),'选择题')]    #搜索选择题
+    sleep    5
+    click element    //li[contains(text(),'综合题')]    #搜索综合题
+    sleep    5
+    click element    //li[contains(text(),'选择题')]/preceding-sibling::li[1]    #回到全部
+    sleep    2
+    click element    //li[contains(text(),'0.1~1星')]    #检索0.1~1星的题目
+    sleep    5
+    click element    //li[contains(text(),'2.1~3星')]    #检索2.1~3星的题目
+    sleep    5
+    click element    //li[contains(text(),'0.1~1星')]/preceding-sibling::li[1]    #回到全部
+    sleep    2
+    click element    //li[contains(text(),'缺难度')]    #检索缺难度
+    sleep    5
+    click element    //li[contains(text(),'缺讲解视频')]    #检索缺讲解视频

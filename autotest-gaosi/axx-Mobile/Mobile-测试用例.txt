@@ -1,0 +1,18 @@
+*** Settings ***
+Library           AppiumLibrary
+Resource          Mobile-基础动作.txt
+Resource          Mobile-业务动作.txt
+
+*** Test Cases ***
+启动
+    学生端账号登录
+    学生端交作业
+    Comment    Input Password
+    Comment    ${b}    Get Current Context
+    Comment    log    ${b}
+    Comment    ${c}    Get Source
+    Comment    log    ${c}
+    Comment    等待    xpath=//android.view.View[contains(@content-desc,'全部作业 ')]
+    Comment    click element    xpath=//android.view.View[contains(@content-desc,'全部作业 ')]
+    Comment    click element    accessibility_id=老师说
+    Comment    学生端账号退出

@@ -1,0 +1,236 @@
+*** Settings ***
+Resource          业务动作.txt
+Resource          参数.txt
+Library           AutoItLibrary
+Library           Selenium2Library
+Library           OperatingSystem
+Library           robotpil.py
+Variables         robotpil.py
+
+*** Keywords ***
+非正常账号判断
+    ${status}    run keyword and return status    page should contain element    //div[@i="content"]/div/div[1]/a[contains(text(),'继续进入')]    #//div[@i="content"]/div/div/a[1]
+    run keyword if    ${status}    click link    //div[@i="content"]/div/div/a[1]
+    ...    ELSE    sleep    3    # 未提交证书提示框
+    ${status1}    run keyword and return status    page should contain element    //div[@i="content"]/div[1]/a[contains(@id,'saveCampus')]    #//div[@i="content"]/div[1]/a[contains(text(),'提交')]    #设置学科所用教材版本
+    run keyword if    ${status1}    等待    //div[@i="content"]/div[1]/a[contains(text(),'提交')]    click element    //div[@i="content"]/div[1]/a[contains(@id,'saveCampus')]
+    ...    ELSE    sleep    6
+    ${status2}    run keyword and return status    page should contain element    //div[@class="password-mask"]/a[contains(@class,'go_edit')]
+    run keyword if    ${status2}    click element    //a[@href="http://i.aixuexi.com/forceModifyPwd/forceModifyPwdView.do"]    \    \    # 修改密码提示框
+    ...    # /preceding-sibling::div[1]
+
+a备课-登录
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开浏览器-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开浏览器-gc
+    ...    ELSE    打开浏览器-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    15201569320
+    input text    id=password    123456
+    click element    id=submit
+    click element    id=beike
+    等待    //div[@class="password-mask"]/div
+    click element    //div[@class="password-mask"]/div
+    click element    //dd[@class="gradeList"]/a[2]
+    click element    //dd[@class="periodList"]/a[2]
+    click element    //div[@class="classType english"]/ul/li[2]
+    click element    //div[@class="left animated"]/ul/li[1]
+    Comment    click element    //div[@class="xx_sec_home"]/ul/li[2]
+    Select Window    new
+    Comment    等待    //li[@class="currentLesson"]
+    Comment    click element    //li[@class="currentLesson"]
+    Comment    Log To Console    "hhhhhh"
+    click link    //a[@class="jiangyi "]
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    Comment    Click Button    class=component_base next active
+    click link    //a[@class="beike "]
+    click link    //a[@class="shilu "]
+
+axx_打开测评
+    sleep    3
+    页面存在就点击    //div[@class="common-mask-content"]/span    #关闭弹出广告
+    sleep    1
+    等待    //a[@href="http://front.aixuexi.com"]
+    click element    //a[@href="http://front.aixuexi.com"]    #测评中心
+    截图    测评
+
+学管理
+    [Arguments]    ${username}    ${userpwd}
+    Run Keyword If    "${browser}"=="ff"    打开浏览器-ff
+    ...    ELSE IF    "${browser}"=="gc"    打开浏览器-gc
+    ...    ELSE    打开浏览器-ie
+    Maximize Browser Window
+    等待    id=username
+    input text    id=username    18600298826    #15201569320
+    input text    id=password    qaz123    #123456
+    click element    id=submit
+    click element    id=xuexiao
+    Comment    等待    //div[@class="clos_ioc"]
+    Comment    click element    //div[@class="clos_ioc"]
+    click link    //a[@class="nav5"]
+    Comment    账号管理
+    click link    //a[@class="new_cre"]
+    input text    id=realName    嘻嘻1
+    input text    id=telephone    00016110201
+    click element    //div[@class="dian1 x1 newCheckbox teacher"]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[1]/div/div[1]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[2]/div/div[1]/div[1]
+    click element    //*[@id="moduleId"]/div[6]/div[1]/div[2]/div/div[2]/div[2]/div/div[1]/div[2]/div[2]/div/div[1]
+    click link    id=addUser
+
+打开浏览器选择
+    [Arguments]    ${url}    # 网页地址
+    Run Keyword If    "${browser}"=="ff"    打开浏览器-ff    ${url}
+    ...    ELSE IF    "${browser}"=="gc"    打开浏览器-gc    ${url}
+    ...    ELSE    打开浏览器-ie    ${url}
+
+打开浏览器-ff
+    [Arguments]    ${url}
+    Open Browser    ${url}    firefox    ff_profile_dir=${firefox_profile}
+    Maximize Browser Window
+
+打开浏览器-ie
+    [Arguments]    ${url}
+    ${local_ie_driver}    Set Variable    C:\\Python27\\IEDriverServer.exe
+    Set Environment Variable    no_proxy    127.0.0.1
+    Set Environment Variable    webdriver.ie.driver    ${local_ie_driver}
+    Open Browser    ${url}    ie
+    Maximize Browser Window
+
+打开浏览器-gc
+    [Arguments]    ${url}
+    taskKill    chromedriver.exe
+    taskKill    chrome.exe
+    taskKill    phantomjs.exe
+    sleep    2
+    Comment    ${local_gc_driver}    Set Variable    C:\\Python27\\chromedriver.exe
+    ${local_gc_driver}    Set Variable    C:\\Python27\\chromedriver.exe
+    Set Environment Variable    no_proxy    localhost
+    Set Environment Variable    webdriver.chrome.driver    ${local_gc_driver}
+    Comment    Open Browser    ${url}    phantomjs
+    Open Browser    ${url}    gc
+    Maximize Browser Window
+
+文件上传-ff
+    win wait    文件上传
+    win active    文件上传
+    ${tmp}    Get Home DIR    123.jpg
+    Control Set Text    文件上传    \    Edit1    ${tmp}
+    sleep    1
+    Control Click    文件上传    \    Button1
+
+文件上传-ie
+    ${tmp}    Get Home DIR    123.jpg
+    Win Wait    选择要加载的文件
+    Win Wait Active    选择要加载的文件
+    Control Set Text    选择要加载的文件    \    Edit1    c:\\123.jpg
+    sleep    1
+    Control Click    选择要加载的文件    \    Button1
+    sleep    2
+    Comment    Send    {ENTER}
+    Comment    con    1
+    Comment    Control Set Text    选择要加载的文件    \    Edit1    ${tmp}
+    Comment    sleep    1
+    Comment    Control Click    选择要加载的文件    \    Button1
+
+文件上传-gc
+    [Arguments]    ${filename}
+    Win Wait    打开
+    win active    打开
+    ${tmp}    Get Home DIR    ${filename}
+    Control Set Text    打开    \    Edit1    ${tmp}
+    sleep    1
+    Control Click    打开    \    Button1
+    sleep    1
+
+等待
+    [Arguments]    ${xpath}
+    Wait Until Page Contains Element    ${xpath}    20    error="Can`t Find This Element !"
+
+确认
+    等待    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+    sleep    1
+    click button    //div[@id="ConfirmMessage"]/following-sibling::div[1]/div/button[1]
+
+提示
+    sleep    1
+    等待    //div[@id="AlertMessage"]/following-sibling::div[1]/div/button[1]
+    click button    //div[@id="AlertMessage"]/following-sibling::div[1]/div/button[1]
+
+浏览器提示框确认
+    [Arguments]    ${notice}
+    sleep    2
+    ${msg}    confirm Action
+    ${res}    Set Variable If    "${notice}" in "${msg}"    true    false
+    Should Be Equal As Strings    ${res}    true
+    Choose Ok On Next Confirmation
+
+浏览器提示框-取消
+    sleep    6
+    ${msg}    confirm Action
+    Comment    ${res}    Set Variable If    "${notice}" in "${msg}"    true    false
+    Comment    Should Be Equal As Strings    ${res}    true
+    Choose Cancel On Next Confirmation
+
+axx_短信验证码
+    [Arguments]    ${phone}
+    ${res}    Get Mysql Item    SELECT * FROM `notify_record` WHERE contact='${phone}' ORDER BY add_time DESC;    content
+    [Return]    ${res}
+
+页面存在就点击
+    [Arguments]    ${xpath}
+    sleep    2
+    ${res}    Get Matching Xpath Count    ${xpath}
+    Run Keyword If    ${res}==1    click element    ${xpath}
+
+test1
+    ${temp}    set variable    13132
+    [Return]    ${temp}
+
+截图
+    [Arguments]    ${filename}
+    ${time}    Get Time    epoch
+    ${ScreenshotPath}    getHomePath
+    ${file}    set variable    ${ScreenshotPath}jietu\\${filename}${time}.png
+    Capture Page Screenshot    ${file}
+
+DIY_一级菜单
+    [Arguments]    ${menu}
+    select window    new    #选择新页面
+    ${title_0}    gettext    //div[@id='root']/div/div[1]/div[1]/span
+    Should Be Equal As Strings    ${title_0}    爱学习DIY系统
+    等待    //li[contains(text(),'${menu}')]
+    click element    //li[contains(text(),'${menu}')]
+    sleep    5
+
+DIY_二级菜单
+    [Arguments]    ${erji_menu}
+    click element    //li[contains(text(),'${erji_menu}')]
+    sleep    3
+
+资源库选择知识点题模
+    sleep    5
+    等待    //span[contains(text(),'自动化测试')]
+    sleep    2
+    click element    //span[contains(text(),'自动化测试')]    #点击文件夹
+    sleep    2
+    等待    //span[contains(text(),'自动化测试知识点2')]
+    sleep    2
+    click element    //span[contains(text(),'自动化测试知识点2')]    #点击知识点
+
+管理中心_课程管理
+    等待    //a[@href="http://diy.aixuexi.com"]
+    click element    //a[@href="http://diy.aixuexi.com"]    #课程管理
+    sleep    2
+
+管理中心_内容管理
+    等待    //a[@class="first cms"]
+    Click Element    //a[@class="first cms"]    #内容管理
+    sleep    2
+
+写入测试环境hosts
+    [Arguments]    ${filename}
+    ${hosts_path}    Get Home DIR    ${filename}
+    Copy File    ${hosts_path}    C:\\Windows\\System32\\drivers\\etc\\

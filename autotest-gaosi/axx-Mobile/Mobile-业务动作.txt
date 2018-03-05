@@ -1,0 +1,52 @@
+*** Settings ***
+Resource          Mobile-基础动作.txt
+Library           AppiumLibrary
+
+*** Keywords ***
+学生端账号登录
+    Open Application    http://localhost:4723/wd/hub    platformName=Android    platformVersion=5.1    deviceName=PBDA9PVW99999999    appPackage=gaosi.com.learn    appActivity=.MainActivity
+    ...    appWaitActivity=io.dcloud.PandoraEntryActivity
+    等待    accessibility_id=收不到验证码？使用账号密码登录
+    click element    accessibility_id=收不到验证码？使用账号密码登录
+    Comment    sleep    2
+    Comment    ${b}    Get Current Context
+    Comment    ${var}    Get Contexts
+    Comment    Switch To Context    ${b}
+    Comment    log    ${var}
+    Comment    log    ${b}
+    Comment    tap    [(505,315)]
+    Click A Point    500    313
+    等待    xpath=//android.webkit.WebView/android.view.View[4]/android.widget.EditText[1]
+    input text    xpath=//android.webkit.WebView/android.view.View[4]/android.widget.EditText[1]    13220000008
+    input text    xpath=//android.webkit.WebView/android.view.View[4]/android.widget.EditText[2]    123456
+    click element    xpath=//android.webkit.WebView/android.view.View[4]/android.widget.Button
+
+学生端账号退出
+    等待    accessibility_id=我
+    click element    accessibility_id=我
+    等待    xpath=//android.webkit.WebView/android.view.View[@content-desc="设置"]
+    click element    xpath=//android.webkit.WebView/android.view.View[@content-desc="设置"]
+    等待    xpath=//android.widget.Button[@content-desc="退出登录 "]
+    click element    xpath=//android.widget.Button[@content-desc="退出登录 "]
+    等待    name=确定
+    Click Button    确定
+
+学生端交作业
+    等待    xpath=//android.widget.Button[@content-desc='交作业'][1]
+    click element    xpath=//android.widget.Button[@content-desc='交作业'][1]
+    Comment    等待    xpath=//android.view.View[@content-desc='空'][1]
+    Comment    input text    xpath=//android.view.View[@content-desc='空'][1]/following-sibling::android.widget.EditText[1]    1
+    Comment    click element    xpath=//android.view.View[@content-desc='下一题']
+    Comment    等待    xpath=//android.webkit.WebView/android.widget.EditText[1]
+    Comment    click element    xpath=//android.webkit.WebView/android.widget.EditText[1]
+    Comment    input text    xpath=//android.webkit.WebView/android.widget.EditText[1]    13
+    : FOR    ${i}    IN RANGE    1000
+    \    等待    xpath=//android.webkit.WebView[@content-desc='作业']/android.view.View[@content-desc='空']
+    \    Comment    click element    xpath=//android.view.View[@content-desc='空'][1]/following-sibling::android.widget.EditText[1]
+    \    input text    xpath=//android.webkit.WebView[@content-desc='作业']/android.view.View[@content-desc='空']/following-sibling::android.widget.EditText    12
+    \    sleep    2
+    \    ${res}    Run Keyword and return status    Page Should Contain Element    xpath=//android.view.View[@content-desc='完成']
+    \    run keyword if    ${res}    click element    xpath=//android.view.View[@content-desc='完成']
+    \    ...    ELSE    click element    xpath=//android.view.View[@content-desc='下一题']
+    \    Exit For Loop If    ${res}
+    \    Comment    xpath=//android.widget.Button[@content-desc='交作业'][1]

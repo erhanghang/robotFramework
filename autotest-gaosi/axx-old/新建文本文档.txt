@@ -1,0 +1,5 @@
+hm
+ff_profile_dir=C:\\Users\\pgq\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\qer87bo9.selenium
+
+gs
+ff_profile_dir=C:\\Users\\PGQ-SDZX\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\xc2h5kle.robot

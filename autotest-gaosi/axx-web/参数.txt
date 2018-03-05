@@ -1,0 +1,34 @@
+*** Variables ***
+${threeNUM}       006    # ${threeNUM}3位数字,一般用作手机尾号，每次运行+1
+${fiveNUM}        0006    # ${fiveNUM}5位数字一般用作手机号中部，可自设一个特定的，一般情况下只需改一次
+${code}           pgq0006    # 独有编号，每次根据业务自行填写，如：spa001
+${classType}      高斯数学一年级精英体系（同步冀教版2课时）    # 创建班级的班型
+${grade}          一年级    # 创建班级所属年级
+${educationType}    小学
+${seasonalType}    春季    # 暑假，秋季，寒假，春季
+${classTime}      2017    # 开课所在年份
+${fileName}       文件上传test1.pdf
+@{TeacherInfo}    教师${code}    0003${fiveNUM}${threeNUM}    男    数学    教师${code}的宣传名    全职
+${jg_name——备用}    ${code}自动化测试培训机构${threeNUM}    # 机构名称
+${jg_phone——备用}    0001${fiveNUM}${threeNUM}    # 学校管理手机号
+${ls_name}        ${code}老师${threeNUM}    # 老师名称
+${ls_phone}       0002${fiveNUM}${threeNUM}    # 老师手机号
+${bj_name}        ${code}自动化测试班级${threeNUM}    # 班级名称
+${qyjphone}       15201569320    #newbeike学校管理手机号（齐亚静）
+@{select_bk}      二年级    寒假
+@{teacher}        #教师${code} | 0004${fiveNUM}${threeNUM} | 男 | 数学 | 教师${code}的宣传名 | 全职 | # 男/女, 数学/语文/外研语文
+@{headmsterInfo}    0001${fiveNUM}${threeNUM}    123456    # 15300207124 \ 00020001003
+${qt_url}         http://www.aixuexi.com
+${ht_url}         http://guanli.aixuexi.com
+${browser}        gc
+${firefox_profile}    C:\\Users\\Administrator\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\j0jjxg9b.default
+@{database}       101.201.141.69    develop    h3oKg9'X!P?t    managesystemv1.0    # mysql_host|mysql_user|mysql_password|mysql_dbname
+@{ht_user}        yupeng@gaosiedu.com    123456    # 后台管理员用户和密码
+${ht_username}    齐亚静    # 销售代表营销顾问等
+${courseName}     ypAutotest    #自动化测试课程名称
+${class_Num}      自动化测试班型    #创建班型的名称
+${subject}        小学数学    #班型学科
+${jg_name}        YP测试机构    # 机构名字
+@{jg_phone}       13021258755    123456    # 前台登录
+${mysql_institution}    host='101.201.141.69',port=3306,user='aixuexi',password='Px^nG)wB`%~ZM',database='institution',charset='utf8'
+${mysql_managesystemv1.0}    host='101.201.141.69',port=3306,user='aixuexi',password='Px^nG)wB`%~ZM',database='managesystemv1.0',charset='utf8'
